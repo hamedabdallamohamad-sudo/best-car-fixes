@@ -40,11 +40,14 @@ try{
  assert.equal((await api.adminGet(req('/api/admin'))).status,401);
  assert.equal((await api.adminGet(req('/api/admin','GET',null,{Authorization:'Bearer other-token'}))).status,403);
  let state=await (await api.adminGet(req('/api/admin','GET',null,auth))).json();
+ assert.equal(state.catalog.socialLinks.youtube,'');state.catalog.socialLinks.youtube=' https://www.youtube.com/@bestcarfixes ';state.catalog.socialLinks.instagram='https://www.instagram.com/bestcarfixes';
  state.catalog.whatsapp='19999999999';state.catalog.name='BESTCAR TEST';state.catalog.products[0].price=45.55;state.catalog.products[1].active=false;
  let res=await api.adminPut(req('/api/admin','PUT',state,auth));assert.equal(res.status,200);
  assert.equal((await api.adminPut(req('/api/admin','PUT',state,auth))).status,409);
  assert.equal((await api.adminPut(req('/api/admin','PUT',{...state,catalog:{...state.catalog,whatsapp:'abc'}},auth))).status,400);
- const pub=await (await api.catalogGet()).json();assert.equal(pub.name,'BESTCAR TEST');assert(!pub.products.some(p=>p.id==='brake'));
+ for(const bad of ['javascript:alert(1)','https://youtube.com.evil.test/channel','https://user:pass@youtube.com/@test'])assert.equal((await api.adminPut(req('/api/admin','PUT',{...state,catalog:{...state.catalog,socialLinks:{...state.catalog.socialLinks,youtube:bad}}},auth))).status,400);
+ const pub=await (await api.catalogGet()).json();assert.equal(pub.socialLinks.youtube,'https://www.youtube.com/@bestcarfixes');assert.equal(pub.socialLinks.instagram,'https://www.instagram.com/bestcarfixes');assert.equal(pub.name,'BESTCAR TEST');assert(!pub.products.some(p=>p.id==='brake'));
+ const legacyPrivate=[...documents.values()].find(d=>d.name.endsWith('/catalog/main'));delete legacyPrivate.fields.catalog.mapValue.fields.socialLinks;const backwards=await (await api.adminGet(req('/api/admin','GET',null,auth))).json();assert.equal(backwards.catalog.socialLinks.youtube,'');assert.equal(backwards.catalog.name,'BESTCAR TEST');
  const payload={id:crypto.randomUUID(),name:'Test customer',phone:'+19999999999',vehicle:'Test vehicle 2026',details:'Integration test only',language:'ar',items:[{id:'oil',quantity:2,price:.01}]};
  assert.equal((await api.orderPost(req('/api/orders','POST',{...payload,items:[{id:'brake',quantity:1}]}))).status,409);
  assert.equal((await api.orderPost(req('/api/orders','POST',{...payload,items:[{id:'oil',quantity:-1}]}))).status,400);
@@ -61,5 +64,5 @@ try{
  const imageResponse=await api.mediaGet(req(img.url),{params:Promise.resolve({key:img.url.split('/').pop()})});assert.equal(imageResponse.status,200);assert.equal(imageResponse.headers.get('content-type'),'image/png');
  assert.equal((await api.uploadPost(new Request('https://test.local/api/uploads',{method:'POST',headers:{...auth,Origin:'https://test.local','Content-Type':'image/svg+xml'},body:'<svg/>'}))).status,400);
  assert.equal((await api.uploadPost(new Request('https://test.local/api/uploads',{method:'POST',headers:{Origin:'https://test.local','Content-Type':'image/png'},body:png}))).status,401);
- console.log('PASS: Firebase token owner checks, validation, catalog adapter, hidden products, revision conflicts, server pricing, order idempotency, WhatsApp, completion and R2 image access. Firebase network responses are mocked; deployed Firestore rules still need a live verification.');
+ console.log('PASS: social link persistence and URL validation, legacy settings compatibility, Firebase owner checks, catalog, orders and R2 image access. Firebase network responses are mocked; deployed Firestore rules still need a live verification.');
 }finally{globalThis.RESTORE_FETCH?.();await mf.dispose();delete globalThis.TEST_ENV;delete globalThis.RESTORE_FETCH}
