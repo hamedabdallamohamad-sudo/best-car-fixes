@@ -1,0 +1,2 @@
+export type Banner={id:string;image:string;ar:string;en:string;descriptionAr:string;descriptionEn:string;buttonAr:string;buttonEn:string;href:string;placement:'home'|'shop';active:boolean};
+export function validBannerLink(value:string){if(!value.trim())return true;if(/^#(home|shop|services|contact)$/.test(value))return true;try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password}catch{return false}}
