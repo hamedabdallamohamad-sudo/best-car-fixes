@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'zjTXYYxb0rgW4AUPjL9NkuF0gD03';
+    }
+    function textBetween(value, min, max) {
+      return value is string && value.size() >= min && value.size() <= max;
+    }
+    function validItem(index) {
+      let item = request.resource.data.items[index];
+      let product = get(/databases/$(database)/documents/catalog/main).data.pricing[item.id];
+      return item is map
+        && item.keys().hasAll(['id', 'ar', 'en', 'quantity', 'priceCents', 'demo'])
+        && item.keys().hasOnly(['id', 'ar', 'en', 'quantity', 'priceCents', 'demo'])
+        && textBetween(item.id, 1, 80)
+        && item.quantity is int && item.quantity >= 1 && item.quantity <= 99
+        && item.priceCents is int && item.priceCents >= 1
+        && product.active == true
+        && item.priceCents == product.priceCents
+        && item.ar == product.ar && item.en == product.en
+        && item.demo == product.demo;
+    }
+    function validLine(index) {
+      return request.resource.data.items.size() <= index || validItem(index);
+    }
+    function lineTotal(index) {
+      return request.resource.data.items.size() > index
+        ? request.resource.data.items[index].priceCents * request.resource.data.items[index].quantity
+        : 0;
+    }
+    function validOrder(orderId) {
+      let data = request.resource.data;
+      return orderId.matches('^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$')
+        && data.keys().hasAll(['customer', 'phone', 'vehicle', 'details', 'items', 'totalCents', 'status', 'notes', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['customer', 'phone', 'vehicle', 'details', 'items', 'totalCents', 'status', 'notes', 'createdAt', 'updatedAt'])
+        && textBetween(data.customer, 2, 100)
+        && textBetween(data.phone, 7, 16)
+        && data.phone.matches('^[+]?[1-9][0-9]{6,14}$')
+        && textBetween(data.vehicle, 2, 160)
+        && textBetween(data.details, 0, 2000)
+        && data.items is list && data.items.size() <= 10
+        && (data.items.size() > 0 || data.details.size() > 0)
+        && validLine(0) && validLine(1) && validLine(2) && validLine(3) && validLine(4)
+        && validLine(5) && validLine(6) && validLine(7) && validLine(8) && validLine(9)
+        && data.totalCents is int
+        && data.totalCents == lineTotal(0) + lineTotal(1) + lineTotal(2) + lineTotal(3) + lineTotal(4)
+          + lineTotal(5) + lineTotal(6) + lineTotal(7) + lineTotal(8) + lineTotal(9)
+        && data.status == 'new' && data.notes == ''
+        && data.createdAt == request.time && data.updatedAt == request.time;
+    }
+    match /catalog/main {
+      allow get: if isAdmin();
+      allow create, update: if isAdmin();
+      allow list, delete: if false;
+    }
+    match /publicCatalog/main {
+      allow get: if true;
+      allow create, update: if isAdmin();
+      allow list, delete: if false;
+    }
+    match /orders/{orderId} {
+      allow get, list: if isAdmin();
+      allow create: if validOrder(orderId);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'notes', 'updatedAt'])
+        && request.resource.data.status in ['new', 'processing', 'ready', 'completed', 'cancelled']
+        && textBetween(request.resource.data.notes, 0, 2000)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

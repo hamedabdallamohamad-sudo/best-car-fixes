@@ -1,0 +1,1 @@
+{"files.exclude":{"**/node_modules":true,"**/.wrangler":true,"**/.vinext":true},"typescript.tsdk":"node_modules/typescript/lib"}
