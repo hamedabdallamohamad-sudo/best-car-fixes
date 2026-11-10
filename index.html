@@ -141,8 +141,8 @@ footer{padding:26px}
 import {db} from "./firebase-config.js";
 import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const T={
-en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart ✓",bookthis:"Book this service"},
-ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة ✓",bookthis:"احجز هذه الخدمة"}};
+en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart ✓",bookthis:"Book this service",nowa:"WhatsApp number is not set yet."},
+ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة ✓",bookthis:"احجز هذه الخدمة",nowa:"لم يتم ضبط رقم واتساب بعد."}};
 const DEF=[["🔍","Car diagnostics","فحص الأعطال بالكمبيوتر"],["⚙️","Engine repair","إصلاح المحركات"],["🔧","Transmission repair","إصلاح ناقل الحركة"],["⚡","Electrical system repair","إصلاح الكهرباء"],["💻","Computer programming","برمجة الكمبيوتر"],["🔑","Key programming","برمجة المفاتيح"],["🛠️","General vehicle maintenance","الصيانة العامة"]].map(x=>({icon:x[0],title:x[1],titleAr:x[2]}));
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const tr=k=>T[lang][k],pk=(o,k)=>(lang=="ar"&&o[k+"Ar"])||o[k]||"";
@@ -153,7 +153,8 @@ const DN={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ar:["الأحد","ال�
 const vl=p=>{const v=VD.find(x=>x.id==p.video);return v?`<a href="${esc(v.url)}" target="_blank" rel="noopener">▶ ${tr("watch")}</a>`:""};
 const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
 const wa=()=>(S.whatsapp||"").replace(/\D/g,"");
-const openWA=t=>window.open("https://wa.me/"+wa()+"?text="+encodeURIComponent(t),"_blank");
+const num=k=>((S[k]||S.whatsapp||"")+"").replace(/\D/g,"");
+const openWA=(t,k)=>{const n=num(k);if(!n){toast(tr("nowa"));return}window.open("https://wa.me/"+n+"?text="+encodeURIComponent(t),"_blank")};
 const yt=u=>(String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1];
 
 function render(){
@@ -232,15 +233,16 @@ $("#cx").onclick=()=>$("#cart").classList.remove("open");
 $("#lang").onclick=()=>{lang=lang=="ar"?"en":"ar";localStorage.lang=lang;render()};
 $("#co").onclick=()=>{
   if(!cart.length)return toast(tr("empty"));
+  if(!num("whatsappOrders"))return toast(tr("nowa"));
   const total=cart.reduce((a,c)=>a+c.qty*c.price,0),o={name:$("#cn").value,phone:$("#cp").value,address:$("#ca").value,items:cart,total,status:"new",createdAt:serverTimestamp()};
   addDoc(collection(db,"orders"),o).catch(()=>{});
-  openWA(`🛒 New order / طلب جديد\n${cart.map(c=>`• ${c.name} × ${c.qty} = $${(c.qty*c.price).toFixed(2)}`).join("\n")}\nTotal: $${total.toFixed(2)}\n${o.name} | ${o.phone}\n${o.address}`);
+  openWA(`🛒 New order / طلب جديد\n${cart.map(c=>`• ${c.name} × ${c.qty} = $${(c.qty*c.price).toFixed(2)}`).join("\n")}\nTotal: $${total.toFixed(2)}\n${o.name} | ${o.phone}\n${o.address}`,"whatsappOrders");
   cart=[];drawCart();$("#cart").classList.remove("open");
 };
 $("#bf").onsubmit=e=>{
   e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
   addDoc(collection(db,"appointments"),{...f,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
-  openWA(`🔧 Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} ${f.time} | ${f.location}\n${f.notes}`);
+  openWA(`🔧 Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} ${f.time} | ${f.location}\n${f.notes}`,"whatsappBookings");
   e.target.reset();toast(tr("done"));
 };
 const slots=d=>{const h=S.hours?S.hours[new Date(d+"T00:00").getDay()]:{o:"09:00",c:"18:00"};if(!h||h.x||!h.o||!h.c)return[];const r=[];for(let t=+h.o.slice(0,2);t<+h.c.slice(0,2);t++)r.push(String(t).padStart(2,"0")+":00");return r};
@@ -249,7 +251,7 @@ let rimg="";
 $("#rf").elements.image.onchange=async e=>{rimg=e.target.files[0]?await toData(e.target.files[0],800):""};
 $("#rf").onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));delete f.image;
   addDoc(collection(db,"partRequests"),{...f,image:rimg,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
-  openWA(`🔩 Part request / طلب قطعة\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.part}`);
+  openWA(`🔩 Part request / طلب قطعة\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.part}`,"whatsappOrders");
   e.target.reset();rimg="";toast(tr("reqdone"))};
 render();
 const [s,sv,pr,ct,bn,vd]=await Promise.all([getDoc(doc(db,"settings","site")).then(d=>d.data()||{}).catch(()=>({})),get("services"),get("products"),get("categories"),get("banners"),get("videos")]);
