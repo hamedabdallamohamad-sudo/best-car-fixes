@@ -71,7 +71,31 @@ h2{border-inline-start:6px solid var(--o);padding-inline-start:12px;line-height:
 header{box-shadow:0 2px 12px #0004}
 footer{padding:26px}
 @media(max-width:700px){nav{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}nav a{white-space:nowrap}.tiles{margin-top:-30px}}
-@media(prefers-reduced-motion:reduce){.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
+:root{--px:max(5%,calc((100vw - 1200px)/2))}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{background:radial-gradient(#12263a14 1.2px,transparent 1.3px) 0 0/22px 22px,var(--bg)}
+::selection{background:var(--o);color:#fff}
+header,.hero,.tiles,.promo,section,footer{padding-inline:var(--px)}
+section{padding-block:72px}
+h2{font-size:clamp(28px,4vw,38px);margin-bottom:30px}
+#store,#videos{background:#fff}
+.btn,button{transition:filter .15s,transform .15s}.btn:hover,button:hover{filter:brightness(1.1)}
+.hero{position:relative;overflow:hidden;padding-block:120px 110px}
+.hero>*:not(svg){position:relative;z-index:1}
+.gauge{position:absolute;inset-inline-end:var(--px);top:50%;width:min(360px,32vw);transform:translateY(-50%);z-index:0}
+.needle{transform-origin:100px 100px;animation:sweep 1.8s cubic-bezier(.2,.8,.2,1) both;transform:rotate(49deg)}
+@keyframes sweep{from{transform:rotate(-135deg)}to{transform:rotate(49deg)}}
+.card{box-shadow:0 1px 3px #12263a1a;border-radius:6px}
+.card:hover{box-shadow:0 14px 30px #12263a2e}
+.im.ic{font-size:64px;box-shadow:inset 0 -6px 0 var(--o)}
+.price{font-size:26px}
+.fg{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px;max-width:1200px;margin:auto;padding-bottom:22px}
+.fg b{color:#fff;font:700 24px Oswald,Cairo,sans-serif}.fg p{margin-top:6px;max-width:420px}
+.fg a{display:block;color:#9fb0c1;text-decoration:none;padding:2px 0}.fg a:hover{color:#fff}
+.cp{border-top:1px solid #ffffff22;padding-top:16px;text-align:center;font-size:14px}
+footer{text-align:start;padding-block:46px 24px}
+@media(max-width:800px){.gauge{display:none}.fg{grid-template-columns:1fr}.hero{padding-block:80px 90px}}
+@media(prefers-reduced-motion:reduce){.needle{animation:none}.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -83,6 +107,19 @@ footer{padding:26px}
 </header>
 
 <div class="hero" id="top">
+  <svg class="gauge" viewBox="0 0 200 200" aria-hidden="true">
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#ffffff1f" stroke-width="2"/>
+    <circle cx="100" cy="100" r="78" fill="none" stroke="#ffffff1f" stroke-width="10" stroke-linecap="round" stroke-dasharray="367 490" transform="rotate(135 100 100)"/>
+    <circle cx="100" cy="100" r="78" fill="none" stroke="#e8431a" stroke-width="10" stroke-linecap="round" stroke-dasharray="250 490" transform="rotate(135 100 100)"/>
+    <g stroke="#ffffff66" stroke-width="2">
+      <line x1="100" y1="12" x2="100" y2="24" transform="rotate(-135 100 100)"/><line x1="100" y1="12" x2="100" y2="24" transform="rotate(-90 100 100)"/>
+      <line x1="100" y1="12" x2="100" y2="24" transform="rotate(-45 100 100)"/><line x1="100" y1="12" x2="100" y2="24"/>
+      <line x1="100" y1="12" x2="100" y2="24" transform="rotate(45 100 100)"/><line x1="100" y1="12" x2="100" y2="24" transform="rotate(90 100 100)"/>
+      <line x1="100" y1="12" x2="100" y2="24" transform="rotate(135 100 100)"/>
+    </g>
+    <line class="needle" x1="100" y1="100" x2="100" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="9" fill="#e8431a"/>
+  </svg>
   <h1 id="ht"></h1><p id="hp"></p>
   <a class="btn" href="#book" data-i="book"></a><a class="btn ghost" href="#store" data-i="store"></a>
 </div>
@@ -194,7 +231,7 @@ function render(){
   const mq=S.mapQuery||pk(S,"address");
   if($("#mp").dataset.q!=mq){$("#mp").dataset.q=mq;$("#mp").innerHTML=mq?`<iframe title="map" loading="lazy" style="width:100%;height:300px;border:0;margin-top:20px;border-radius:4px" src="https://maps.google.com/maps?q=${encodeURIComponent(mq)}&output=embed"></iframe>`:""}
   $("#fwa").hidden=!wa();if(wa())$("#fwa").href="https://wa.me/"+wa();
-  $("#ft").textContent="© "+new Date().getFullYear()+" "+nm;
+  $("#ft").innerHTML=`<div class="fg"><div><b>${esc(nm)}</b><p>${esc(pk(S,"desc")||tr("tag"))}</p></div><div>${["services","store","request","book"].map(k=>`<a href="#${k}">${tr(k)}</a>`).join("")}</div><div>${S.phone?`<a href="tel:${esc(S.phone)}">📞 ${esc(S.phone)}</a>`:""}${S.email?`<a href="mailto:${esc(S.email)}">✉️ ${esc(S.email)}</a>`:""}${wa()?`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener">💬 ${tr("wa")}</a>`:""}</div></div><p class="cp">© ${new Date().getFullYear()} ${esc(nm)}</p>`;
   drawCart();
 }
 function drawCart(){
