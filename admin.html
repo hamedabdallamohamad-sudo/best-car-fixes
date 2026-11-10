@@ -31,34 +31,41 @@ import {collection,doc,getDoc,getDocs,addDoc,setDoc,updateDoc,deleteDoc,orderBy,
 import {signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const F={
-settings:[["name","اسم الشركة (EN)"],["nameAr","اسم الشركة (AR)"],["desc","وصف الشركة (EN)","t"],["descAr","وصف الشركة (AR)","t"],["logo","الشعار","img"],["whatsapp","رقم واتساب (بالمفتاح الدولي، أرقام فقط)"],["phone","رقم الهاتف"],["email","البريد الإلكتروني"],["address","عنوان الورشة (EN)"],["addressAr","عنوان الورشة (AR)"],["locations","مواقع الورش للحجز (سطر لكل موقع)","t"],["mapUrl","رابط الموقع على الخريطة"],["facebook","رابط فيسبوك"],["instagram","رابط انستغرام"],["tiktok","رابط تيك توك"],["youtube","رابط قناة يوتيوب"]],
+settings:[["name","اسم الشركة (EN)"],["nameAr","اسم الشركة (AR)"],["desc","وصف الشركة (EN)","t"],["descAr","وصف الشركة (AR)","t"],["logo","الشعار","img"],["whatsapp","رقم واتساب (بالمفتاح الدولي، أرقام فقط)"],["phone","رقم الهاتف"],["email","البريد الإلكتروني"],["address","عنوان الورشة (EN)"],["addressAr","عنوان الورشة (AR)"],["locations","مواقع الورش للحجز (سطر لكل موقع)","t"],["mapUrl","رابط الموقع على الخريطة"],["mapQuery","عنوان أو إحداثيات الخريطة (مثال: 24.47,39.61)"],["facebook","رابط فيسبوك"],["instagram","رابط انستغرام"],["tiktok","رابط تيك توك"],["youtube","رابط قناة يوتيوب"]],
 banners:[["title","العنوان (EN)"],["titleAr","العنوان (AR)"],["text","النص (EN)"],["textAr","النص (AR)"],["image","الصورة","img"]],
 services:[["title","اسم الخدمة (EN)"],["titleAr","اسم الخدمة (AR)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["image","الصورة","img"]],
-products:[["name","اسم المنتج (EN)"],["nameAr","اسم المنتج (AR)"],["price","السعر ($)","n"],["category","التصنيف (نفس اسم التصنيف EN)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["image","الصورة","img"]],
+products:[["name","اسم المنتج (EN)"],["nameAr","اسم المنتج (AR)"],["price","السعر ($)","n"],["category","التصنيف (نفس اسم التصنيف EN)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["video","فيديو مرتبط بالمنتج","v"],["image","الصورة","img"]],
 categories:[["name","اسم التصنيف (EN)"],["nameAr","اسم التصنيف (AR)"]],
 videos:[["title","عنوان الفيديو"],["url","رابط يوتيوب"]]};
-const N={settings:"الإعدادات",banners:"العروض",services:"الخدمات",products:"المنتجات",categories:"التصنيفات",videos:"الفيديوهات",orders:"الطلبات",appointments:"المواعيد"};
+const N={settings:"الإعدادات",banners:"العروض",services:"الخدمات",products:"المنتجات",categories:"التصنيفات",videos:"الفيديوهات",orders:"الطلبات",appointments:"المواعيد",partRequests:"طلبات القطع",schedule:"أوقات العمل"};
+const DN=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const ytId=u=>(String(u||"").match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1];
+const ytI=r=>{const i=ytId(r.url);return i?`<img src="https://img.youtube.com/vi/${i}/default.jpg">`:""};
 const DEF=[["🔍","Car diagnostics","فحص الأعطال بالكمبيوتر"],["⚙️","Engine repair","إصلاح المحركات"],["🔧","Transmission repair","إصلاح ناقل الحركة"],["⚡","Electrical system repair","إصلاح الكهرباء"],["💻","Computer programming","برمجة الكمبيوتر"],["🔑","Key programming","برمجة المفاتيح"],["🛠️","General vehicle maintenance","الصيانة العامة"]];
-let cur="settings",edit=null,img={};
-const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
+let cur="settings",edit=null,img={},VL=[];
+const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="v"?`<select data-k="${k}"><option value="">—</option>${VL.map(x=>`<option value="${x.id}" ${x.id==v[k]?"selected":""}>${esc(x.title)}</option>`).join("")}</select>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
 const collect=(fs,old={})=>{const o={};fs.forEach(([k,,t])=>{const e=document.querySelector(`[data-k="${k}"]`);o[k]=t=="img"?(img[k]||old[k]||""):t=="n"?+e.value||0:e.value.trim()});return o};
 const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
 document.addEventListener("change",async e=>{const k=e.target.dataset.f;if(!k)return;img[k]=await toData(e.target.files[0],k=="logo"?400:800);const p=$("#pv_"+k);p.src=img[k];p.hidden=false});
-const list=async n=>(await getDocs(query(collection(db,n),...(n=="orders"||n=="appointments"?[orderBy("createdAt","desc")]:[])))).docs.map(d=>({id:d.id,...d.data()}));
+const list=async n=>(await getDocs(query(collection(db,n),...(n=="orders"||n=="appointments"||n=="partRequests"?[orderBy("createdAt","desc")]:[])))).docs.map(d=>({id:d.id,...d.data()}));
 async function show(){
   $("#tabs").innerHTML=Object.keys(N).map(k=>`<button class="${k==cur?"on":""}" data-t="${k}">${N[k]}</button>`).join("");
   const m=$("#app");img={};
+  if(cur=="schedule"){const s=(await getDoc(doc(db,"settings","site"))).data()||{},h=s.hours||{};
+    m.innerHTML=`<div class="box">${DN.map((n,i)=>{const x=h[i]||{};return `<div class="row"><b style="width:80px">${n}</b><label style="flex-direction:row;align-items:center;gap:4px"><input type=checkbox id="x${i}" style="width:auto" ${x.x?"checked":""}>مغلق</label><input type=time id="o${i}" value="${x.o||"09:00"}" style="width:120px"><input type=time id="c${i}" value="${x.c||"18:00"}" style="width:120px"></div>`}).join("")}<button id="sv">حفظ أوقات العمل</button></div>`;
+    $("#sv").onclick=async()=>{const hours={};DN.forEach((_,i)=>hours[i]={x:$("#x"+i).checked,o:$("#o"+i).value,c:$("#c"+i).value});await setDoc(doc(db,"settings","site"),{hours},{merge:true});alert("تم الحفظ")};return}
   if(cur=="settings"){const s=(await getDoc(doc(db,"settings","site"))).data()||{};
     m.innerHTML=`<div class="box">${form(F.settings,s)}<button id="sv">حفظ الإعدادات</button></div>`;
-    $("#sv").onclick=async()=>{await setDoc(doc(db,"settings","site"),collect(F.settings,s));alert("تم الحفظ")};return}
+    $("#sv").onclick=async()=>{await setDoc(doc(db,"settings","site"),collect(F.settings,s),{merge:true});alert("تم الحفظ")};return}
   const rows=await list(cur);
-  if(cur=="orders"||cur=="appointments"){
-    m.innerHTML=`<div class="box" style="grid-column:1/-1"><h3>${N[cur]} (${rows.length})</h3>${rows.map(r=>`<div class="row"><span><b>${esc(r.name)}</b> – ${esc(r.phone)}<br>${cur=="orders"?r.items.map(i=>esc(i.name)+" ×"+i.qty).join("، ")+" | $"+Number(r.total).toFixed(2)+"<br>"+esc(r.address):esc(r.car)+" ("+esc(r.year)+") – "+esc(r.service)+"<br>"+esc(r.date)+" | "+esc(r.location)+"<br>"+esc(r.notes)}</span><select data-s="${r.id}"><option value=new ${r.status=="new"?"selected":""}>جديد</option><option value=done ${r.status=="done"?"selected":""}>تم</option></select><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;return}
+  if(cur=="orders"||cur=="appointments"||cur=="partRequests"){
+    m.innerHTML=`<div class="box" style="grid-column:1/-1"><h3>${N[cur]} (${rows.length})</h3>${rows.map(r=>`<div class="row"><span><b>${esc(r.name)}</b> – ${esc(r.phone)}<br>${cur=="orders"?r.items.map(i=>esc(i.name)+" ×"+i.qty).join("، ")+" | $"+Number(r.total).toFixed(2)+"<br>"+esc(r.address):cur=="partRequests"?esc(r.car)+" ("+esc(r.year)+")<br>"+esc(r.part)+(r.image?`<br><img src="${r.image}" style="height:auto;width:auto;max-height:120px">`:""):esc(r.car)+" ("+esc(r.year)+") – "+esc(r.service)+"<br>"+esc(r.date)+" | "+esc(r.location)+"<br>"+esc(r.notes)}</span><select data-s="${r.id}"><option value=new ${r.status=="new"?"selected":""}>جديد</option><option value=done ${r.status=="done"?"selected":""}>تم</option></select><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;return}
+  if(cur=="products")VL=await list("videos");
   if(cur=="products")$("#cats").innerHTML=(await list("categories")).map(c=>`<option value="${esc(c.name)}">`).join("");
   const cur_=rows.find(r=>r.id==edit)||{},lab=r=>r.title||r.name||r.url;
   m.innerHTML=`<div class="box"><h3>${edit?"تعديل":"إضافة"}</h3>${form(F[cur],cur_)}<button id="sv">حفظ</button>${edit?'<button class="sec" id="cn">إلغاء</button>':""}</div>
-  <div class="box"><h3>${N[cur]} (${rows.length})</h3>${cur=="services"&&!rows.length?'<button class="sec" id="seed">إضافة الخدمات الافتراضية</button>':""}${rows.map(r=>`<div class="row">${r.image?`<img src="${r.image}">`:""}<span>${esc(lab(r))}${r.price!==undefined?" – $"+r.price:""}</span><button class="sec" data-e="${r.id}">تعديل</button><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;
-  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;show()};
+  <div class="box"><h3>${N[cur]} (${rows.length})</h3>${cur=="services"&&!rows.length?'<button class="sec" id="seed">إضافة الخدمات الافتراضية</button>':""}${rows.map(r=>`<div class="row">${r.image?`<img src="${r.image}">`:ytI(r)}<span>${esc(lab(r))}${r.price!==undefined?" – $"+r.price:""}</span><button class="sec" data-e="${r.id}">تعديل</button><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;
+  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};if(cur=="videos"&&!ytId(d.url))return alert("رابط يوتيوب غير صحيح");edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;show()};
   if($("#cn"))$("#cn").onclick=()=>{edit=null;show()};
   if($("#seed"))$("#seed").onclick=async()=>{for(const s of DEF)await addDoc(collection(db,"services"),{icon:s[0],title:s[1],titleAr:s[2],desc:"",descAr:"",image:""});show()};
 }

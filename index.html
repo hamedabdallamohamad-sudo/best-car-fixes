@@ -46,13 +46,21 @@ input,select,textarea{width:100%;padding:10px;border-radius:4px;border:1px solid
 #cart.open,[dir=rtl] #cart.open{transform:none}
 .ci{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--l);padding:6px 0}.ci span{flex:1}.ci button{padding:2px 10px}
 footer{background:var(--n);color:#9fb0c1;text-align:center;padding:22px}
-@media(prefers-reduced-motion:reduce){#cart{transition:none}}
+.card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-3px);box-shadow:0 8px 20px #0002}
+nav a.act{color:#fff;border-bottom:2px solid var(--o)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.tools input{flex:1;min-width:180px}.tools select{width:auto}
+#toast{position:fixed;bottom:24px;inset-inline:0;margin:auto;width:max-content;max-width:90%;background:var(--n);color:#fff;padding:10px 18px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}#toast.show{opacity:1}
+#md{position:fixed;inset:0;background:#000a;z-index:20;display:grid;place-items:center;padding:16px}#md[hidden]{display:none}
+.mb{background:#fff;max-width:720px;width:100%;border-radius:6px;position:relative;max-height:90vh;overflow:auto}.mb>button{position:absolute;top:8px;inset-inline-end:8px;z-index:1}.mb .im{height:300px}
+#fwa{position:fixed;bottom:20px;inset-inline-start:16px;width:54px;height:54px;border-radius:50%;background:#25d366;display:grid;place-items:center;font-size:28px;text-decoration:none;box-shadow:0 4px 14px #0004;z-index:8}#fwa[hidden]{display:none}
+@keyframes bump{50%{transform:scale(1.5)}}.bump{display:inline-block;animation:bump .3s}
+@media(prefers-reduced-motion:reduce){#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
 </style>
 </head>
 <body>
 <header>
   <a class="brand" href="#top"><img id="logo" alt="" hidden><b id="sname">BESTCAR FIXES</b></a>
-  <nav><a href="#services" data-i="services"></a><a href="#store" data-i="store"></a><a href="#book" data-i="book"></a><a href="#videos" data-i="videos"></a><a href="#contact" data-i="contact"></a></nav>
+  <nav><a href="#services" data-i="services"></a><a href="#store" data-i="store"></a><a href="#request" data-i="request"></a><a href="#book" data-i="book"></a><a href="#videos" data-i="videos"></a><a href="#contact" data-i="contact"></a></nav>
   <button class="ghost" id="lang">العربية</button>
   <button id="cartbtn">🛒 <span id="cc">0</span></button>
 </header>
@@ -64,7 +72,19 @@ footer{background:var(--n);color:#9fb0c1;text-align:center;padding:22px}
 <div class="promo" id="bn"></div>
 
 <section id="services"><h2 data-i="services"></h2><div class="grid" id="sv"></div></section>
-<section id="store"><h2 data-i="store"></h2><div class="chips" id="cats"></div><div class="grid" id="pr"></div></section>
+<section id="store"><h2 data-i="store"></h2><div class="chips" id="cats"></div>
+<div class="tools"><input id="qs" type="search" data-ph="search"><select id="so" aria-label="sort"><option value="" data-i="sortd"></option><option value="a" data-i="lo"></option><option value="d" data-i="hi"></option></select></div><div class="grid" id="pr"></div></section>
+
+<section id="request"><h2 data-i="request"></h2>
+<form id="rf">
+  <label><span data-i="name"></span><input name="name" required></label>
+  <label><span data-i="phone"></span><input name="phone" type="tel" inputmode="tel" required></label>
+  <label><span data-i="make"></span><input name="car" required></label>
+  <label><span data-i="year"></span><input name="year" type="number" min="1980" max="2030"></label>
+  <label class="full"><span data-i="part"></span><textarea name="part" rows="3" required></textarea></label>
+  <label class="full"><span data-i="photo"></span><input name="image" type="file" accept="image/*"></label>
+  <button class="full" data-i="sendreq"></button>
+</form></section>
 
 <section id="book"><h2 data-i="book"></h2>
 <form id="bf">
@@ -74,15 +94,19 @@ footer{background:var(--n);color:#9fb0c1;text-align:center;padding:22px}
   <label><span data-i="year"></span><input name="year" type="number" min="1980" max="2030" required></label>
   <label><span data-i="service"></span><select name="service" id="bs" required></select></label>
   <label><span data-i="date"></span><input name="date" type="date" required></label>
+  <label><span data-i="time"></span><select name="time" id="bt" required></select></label>
   <label><span data-i="loc"></span><select name="location" id="bl"></select></label>
   <label class="full"><span data-i="notes"></span><textarea name="notes" rows="3"></textarea></label>
   <button class="full" data-i="send"></button>
 </form></section>
 
 <section id="videos"><h2 data-i="videos"></h2><div class="grid" id="vd"></div></section>
-<section id="contact"><h2 data-i="contact"></h2><div class="contact" id="ct"></div></section>
+<section id="contact"><h2 data-i="contact"></h2><div class="contact" id="ct"></div><div id="hr"></div><div id="mp"></div></section>
 <footer id="ft"></footer>
 
+<div id="toast" role="status"></div>
+<div id="md" hidden><div class="mb"><button id="mx" aria-label="close">✕</button><div id="mc"></div></div></div>
+<a id="fwa" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>💬</a>
 <aside id="cart" aria-label="cart">
   <div style="display:flex;justify-content:space-between"><h2 data-i="cart" style="margin:0"></h2><button id="cx">✕</button></div>
   <div id="ci"></div><b id="tot"></b>
@@ -94,14 +118,17 @@ footer{background:var(--n);color:#9fb0c1;text-align:center;padding:22px}
 import {db} from "./firebase-config.js";
 import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const T={
-en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location"},
-ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع"}};
+en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart ✓",bookthis:"Book this service"},
+ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة ✓",bookthis:"احجز هذه الخدمة"}};
 const DEF=[["🔍","Car diagnostics","فحص الأعطال بالكمبيوتر"],["⚙️","Engine repair","إصلاح المحركات"],["🔧","Transmission repair","إصلاح ناقل الحركة"],["⚡","Electrical system repair","إصلاح الكهرباء"],["💻","Computer programming","برمجة الكمبيوتر"],["🔑","Key programming","برمجة المفاتيح"],["🛠️","General vehicle maintenance","الصيانة العامة"]].map(x=>({icon:x[0],title:x[1],titleAr:x[2]}));
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const tr=k=>T[lang][k],pk=(o,k)=>(lang=="ar"&&o[k+"Ar"])||o[k]||"";
 const get=async n=>{try{return(await getDocs(collection(db,n))).docs.map(d=>({id:d.id,...d.data()}))}catch(e){return[]}};
 let lang=localStorage.lang||"en",S={},SV=[],PR=[],CT=[],BN=[],VD=[],cat="";
 let cart=[];try{cart=JSON.parse(localStorage.cart||"[]")}catch(e){}
+const DN={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ar:["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]};
+const vl=p=>{const v=VD.find(x=>x.id==p.video);return v?`<a href="${esc(v.url)}" target="_blank" rel="noopener">▶ ${tr("watch")}</a>`:""};
+const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
 const wa=()=>(S.whatsapp||"").replace(/\D/g,"");
 const openWA=t=>window.open("https://wa.me/"+wa()+"?text="+encodeURIComponent(t),"_blank");
 const yt=u=>(String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1];
@@ -116,14 +143,16 @@ function render(){
   if(S.logo){$("#logo").src=S.logo;$("#logo").hidden=false}
   $("#bn").innerHTML=BN.map(b=>`<div style="${b.image?`background-image:linear-gradient(#0006,#0006),url(${b.image})`:""}"><h3>${esc(pk(b,"title"))}</h3><p>${esc(pk(b,"text"))}</p></div>`).join("");
   const sv=SV.length?SV:DEF;
-  $("#sv").innerHTML=sv.map(s=>`<div class="card"><div class="im" style="${s.image?`background-image:url(${s.image})`:""}">${s.image?"":s.icon||"🔧"}</div><div class="b"><h3>${esc(pk(s,"title"))}</h3><p>${esc(pk(s,"desc"))}</p></div></div>`).join("");
+  $("#sv").innerHTML=sv.map(s=>`<div class="card"><div class="im" style="${s.image?`background-image:url(${s.image})`:""}">${s.image?"":s.icon||"🔧"}</div><div class="b"><h3>${esc(pk(s,"title"))}</h3><p>${esc(pk(s,"desc"))}</p><button data-s="${esc(pk(s,"title"))}">${tr("bookthis")}</button></div></div>`).join("");
   $("#bs").innerHTML=sv.map(s=>`<option>${esc(pk(s,"title"))}</option>`).join("");
   const locs=(S.locations||"").split("\n").map(x=>x.trim()).filter(Boolean);
   $("#bl").innerHTML=(locs.length?locs:[pk(S,"address")||"—"]).map(l=>`<option>${esc(l)}</option>`).join("");
   const cs=[...new Set(PR.map(p=>p.category).filter(Boolean))];
   $("#cats").innerHTML=[["",tr("all")],...cs.map(c=>[c,(CT.find(x=>x.name==c)?pk(CT.find(x=>x.name==c),"name"):c)])].map(c=>`<button class="${cat==c[0]?"on":""}" data-c="${esc(c[0])}">${esc(c[1])}</button>`).join("");
-  const ps=PR.filter(p=>!cat||p.category==cat);
-  $("#pr").innerHTML=ps.length?ps.map(p=>`<div class="card"><div class="im" style="${p.image?`background-image:url(${p.image})`:""}">${p.image?"":"🛞"}</div><div class="b"><h3>${esc(pk(p,"name"))}</h3><p>${esc(pk(p,"desc"))}</p><div class="price">$${Number(p.price||0).toFixed(2)}</div><div class="qty"><input type="number" min="1" value="1" id="q${p.id}"><button data-a="${p.id}">${tr("add")}</button></div></div></div>`).join(""):`<p>${tr("noitems")}</p>`;
+  const q=($("#qs").value||"").toLowerCase();
+  let ps=PR.filter(p=>(!cat||p.category==cat)&&(!q||((p.name||"")+" "+(p.nameAr||"")+" "+(p.desc||"")+" "+(p.descAr||"")).toLowerCase().includes(q)));
+  const so=$("#so").value;if(so)ps=[...ps].sort((a,b)=>so=="a"?a.price-b.price:b.price-a.price);
+  $("#pr").innerHTML=ps.length?ps.map(p=>`<div class="card"><div class="im" data-v="${p.id}" style="cursor:pointer;${p.image?`background-image:url(${p.image})`:""}">${p.image?"":"🛞"}</div><div class="b"><h3 data-v="${p.id}" style="cursor:pointer">${esc(pk(p,"name"))}</h3><p>${esc(pk(p,"desc"))}</p>${vl(p)}<div class="price">$${Number(p.price||0).toFixed(2)}</div><div class="qty"><input type="number" min="1" value="1" id="q${p.id}"><button data-a="${p.id}">${tr("add")}</button></div></div></div>`).join(""):`<p>${tr("noitems")}</p>`;
   $("#vd").innerHTML=VD.map(v=>{const i=yt(v.url);return i?`<a class="card" href="${esc(v.url)}" target="_blank" rel="noopener"><div class="im" style="background-image:url(https://img.youtube.com/vi/${i}/hqdefault.jpg)">▶</div><div class="b"><b>${esc(v.title)}</b></div></a>`:""}).join("");
   const L=[];
   if(wa())L.push(`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener">💬 ${tr("wa")}</a>`);
@@ -132,12 +161,17 @@ function render(){
   if(S.address||S.addressAr)L.push(`<a href="${esc(S.mapUrl||"#")}" target="_blank" rel="noopener">📍 ${esc(pk(S,"address"))}</a>`);
   [["facebook","Facebook"],["instagram","Instagram"],["tiktok","TikTok"],["youtube","YouTube"]].forEach(([k,n])=>S[k]&&L.push(`<a href="${esc(S[k])}" target="_blank" rel="noopener">${n}</a>`));
   $("#ct").innerHTML=L.join("");
+  const hh=S.hours?DN[lang].map((n,i)=>{const h=S.hours[i]||{};return `<div>${n}: ${h.x?tr("closed"):esc((h.o||"")+" – "+(h.c||""))}</div>`}).join(""):"";
+  $("#hr").innerHTML=hh?`<h3 style="margin:22px 0 8px">${tr("hours")}</h3><div class="contact">${hh}</div>`:"";
+  const mq=S.mapQuery||pk(S,"address");
+  if($("#mp").dataset.q!=mq){$("#mp").dataset.q=mq;$("#mp").innerHTML=mq?`<iframe title="map" loading="lazy" style="width:100%;height:300px;border:0;margin-top:20px;border-radius:4px" src="https://maps.google.com/maps?q=${encodeURIComponent(mq)}&output=embed"></iframe>`:""}
+  $("#fwa").hidden=!wa();if(wa())$("#fwa").href="https://wa.me/"+wa();
   $("#ft").textContent="© "+new Date().getFullYear()+" "+nm;
   drawCart();
 }
 function drawCart(){
   localStorage.cart=JSON.stringify(cart);
-  $("#cc").textContent=cart.reduce((a,c)=>a+c.qty,0);
+  $("#cc").textContent=cart.reduce((a,c)=>a+c.qty,0);$("#cc").classList.remove("bump");void $("#cc").offsetWidth;$("#cc").classList.add("bump");
   const t=cart.reduce((a,c)=>a+c.qty*c.price,0);
   $("#ci").innerHTML=cart.length?cart.map((c,i)=>`<div class="ci"><span>${esc(pk(c,"name"))}<br>$${c.price} × ${c.qty}</span><button data-m="${i}">−</button><button data-p="${i}">+</button></div>`).join(""):`<p>${tr("empty")}</p>`;
   $("#tot").textContent=tr("total")+": $"+t.toFixed(2);
@@ -146,16 +180,33 @@ document.addEventListener("click",e=>{
   const d=e.target.dataset||{};
   if(d.c!==undefined){cat=d.c;render()}
   if(d.a){const p=PR.find(x=>x.id==d.a),q=Math.max(1,+$("#q"+d.a).value||1),c=cart.find(x=>x.id==p.id);
-    c?c.qty+=q:cart.push({id:p.id,name:p.name,nameAr:p.nameAr,price:+p.price||0,qty:q});drawCart();$("#cart").classList.add("open")}
+    c?c.qty+=q:cart.push({id:p.id,name:p.name,nameAr:p.nameAr,price:+p.price||0,qty:q});drawCart();toast(tr("added"))}
   if(d.p!==undefined)cart[d.p].qty++;
   if(d.m!==undefined&&--cart[d.m].qty<1)cart.splice(d.m,1);
   if(d.p!==undefined||d.m!==undefined)drawCart();
 });
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2400)};
+const showP=id=>{const p=PR.find(x=>x.id==id);if(!p)return;
+  $("#mc").innerHTML=`<div class="im" style="${p.image?`background-image:url(${p.image})`:""}">${p.image?"":"🛞"}</div><div class="b"><h2>${esc(pk(p,"name"))}</h2><p>${esc(pk(p,"desc"))}</p>${vl(p)}<div class="price">$${Number(p.price||0).toFixed(2)}</div><div class="qty"><input type="number" min="1" value="1" id="mq"><button data-ma="${p.id}">${tr("add")}</button></div></div>`;
+  $("#md").hidden=false};
+document.addEventListener("click",e=>{
+  const v=e.target.closest("[data-v]");if(v)showP(v.dataset.v);
+  const s=e.target.closest("[data-s]");if(s){$("#bs").value=s.dataset.s;$("#book").scrollIntoView({behavior:"smooth"})}
+  const m=e.target.closest("[data-ma]");
+  if(m){const p=PR.find(x=>x.id==m.dataset.ma),q=Math.max(1,+$("#mq").value||1),c=cart.find(x=>x.id==p.id);
+    c?c.qty+=q:cart.push({id:p.id,name:p.name,nameAr:p.nameAr,price:+p.price||0,qty:q});drawCart();$("#md").hidden=true;toast(tr("added"))}
+  if(e.target.id=="md")$("#md").hidden=true;
+});
+$("#mx").onclick=()=>$("#md").hidden=true;
+addEventListener("keydown",e=>{if(e.key=="Escape"){$("#md").hidden=true;$("#cart").classList.remove("open")}});
+$("#qs").oninput=()=>render();$("#so").onchange=()=>render();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("act",a.getAttribute("href")=="#"+e.target.id))}),{rootMargin:"-40% 0px -55% 0px"});
+document.querySelectorAll("section[id]").forEach(s=>io.observe(s));
 $("#cartbtn").onclick=()=>$("#cart").classList.add("open");
 $("#cx").onclick=()=>$("#cart").classList.remove("open");
 $("#lang").onclick=()=>{lang=lang=="ar"?"en":"ar";localStorage.lang=lang;render()};
 $("#co").onclick=()=>{
-  if(!cart.length)return alert(tr("empty"));
+  if(!cart.length)return toast(tr("empty"));
   const total=cart.reduce((a,c)=>a+c.qty*c.price,0),o={name:$("#cn").value,phone:$("#cp").value,address:$("#ca").value,items:cart,total,status:"new",createdAt:serverTimestamp()};
   addDoc(collection(db,"orders"),o).catch(()=>{});
   openWA(`🛒 New order / طلب جديد\n${cart.map(c=>`• ${c.name} × ${c.qty} = $${(c.qty*c.price).toFixed(2)}`).join("\n")}\nTotal: $${total.toFixed(2)}\n${o.name} | ${o.phone}\n${o.address}`);
@@ -164,9 +215,17 @@ $("#co").onclick=()=>{
 $("#bf").onsubmit=e=>{
   e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
   addDoc(collection(db,"appointments"),{...f,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
-  openWA(`🔧 Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} | ${f.location}\n${f.notes}`);
-  e.target.reset();alert(tr("done"));
+  openWA(`🔧 Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} ${f.time} | ${f.location}\n${f.notes}`);
+  e.target.reset();toast(tr("done"));
 };
+const slots=d=>{const h=S.hours?S.hours[new Date(d+"T00:00").getDay()]:{o:"09:00",c:"18:00"};if(!h||h.x||!h.o||!h.c)return[];const r=[];for(let t=+h.o.slice(0,2);t<+h.c.slice(0,2);t++)r.push(String(t).padStart(2,"0")+":00");return r};
+$("#bf").elements.date.onchange=e=>{const s=slots(e.target.value);$("#bt").innerHTML=s.map(x=>`<option>${x}</option>`).join("");if(!s.length){toast(tr("closedday"));e.target.value=""}};
+let rimg="";
+$("#rf").elements.image.onchange=async e=>{rimg=e.target.files[0]?await toData(e.target.files[0],800):""};
+$("#rf").onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));delete f.image;
+  addDoc(collection(db,"partRequests"),{...f,image:rimg,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
+  openWA(`🔩 Part request / طلب قطعة\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.part}`);
+  e.target.reset();rimg="";toast(tr("reqdone"))};
 render();
 const [s,sv,pr,ct,bn,vd]=await Promise.all([getDoc(doc(db,"settings","site")).then(d=>d.data()||{}).catch(()=>({})),get("services"),get("products"),get("categories"),get("banners"),get("videos")]);
 S=s;SV=sv;PR=pr;CT=ct;BN=bn;VD=vd;render();
