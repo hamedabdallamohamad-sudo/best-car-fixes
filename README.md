@@ -1,54 +1,38 @@
-# BESTCAR FIXES
+# BESTCAR FIXES – دليل التشغيل
 
-للبدء في Windows وVisual Studio Code اتبع [دليل التشغيل](SETUP-WINDOWS.md).
+الموقع مكتوب بـ HTML + CSS + JavaScript بسيط (بدون أي تثبيت أو build)، ويعمل مباشرة على GitHub Pages.
 
-موقع خدمات صيانة سيارات ومتجر قطع غيار عربي / إنجليزي، مع لوحة تحكم منفصلة في `/admin`.
+## 1) إعداد Firebase
+1. ادخل https://console.firebase.google.com ← **Add project**.
+2. **Build ← Firestore Database ← Create database** (Production mode).
+3. **Build ← Authentication ← Get started ← Email/Password ← Enable**، ثم من تبويب Users اضغط **Add user** وأنشئ حساب المدير (بريد + كلمة مرور).
+4. **Project settings ← Your apps ← Web (</>)** ← انسخ بيانات الإعداد والصقها داخل `firebase-config.js`.
+5. **Firestore ← Rules** ← الصق القواعد التالية (غيّر البريد إلى بريد المدير) ثم Publish:
 
-## ما تم تنفيذه
-- هوية الموقع: الاسم، رفع الشعار، الوصف العربي والإنجليزي، العنوان، رقم واتساب.
-- المنتجات: إضافة وتعديل وحذف وصور وأسعار وتصنيفات وإظهار وإخفاء.
-- الخدمات: إضافة وتعديل وحذف وصف ثنائي اللغة وإظهار وإخفاء.
-- الطلبات: تخزين مركزي دائم، تفاصيل العميل والسيارة والقطع والأسعار وقت الطلب، حالات جديد / قيد التنفيذ / جاهز / مكتمل / ملغي وملاحظات داخلية.
-- واتساب: يُحفظ الطلب أولًا، ثم يعرض رابطًا برسالة جاهزة للرقم المُعد من اللوحة. يضغط العميل إرسال في واتساب. لا يستخدم WhatsApp Business API ولا يرسل آليًا.
-- حماية الإدارة: تسجيل الدخول بالبريد وكلمة المرور من خلال Firebase Authentication، والتحقق من ID token على الخادم ومن UID المالك في قواعد Firestore. لا توجد كلمة مرور مكتوبة في المصدر.
-- قاعدة Firestore للكتالوج والطلبات الجديدة، وR2 الحالي للصور دون Firebase Storage. تبقى بيانات D1 السابقة محفوظة وتظهر طلباتها في اللوحة، وتُنسخ إعدادات الكتالوج السابق عند أول حفظ في Firebase. لا تستخدم localStorage لسجلات المتجر؛ يستخدم للغة والسلة فقط.
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function admin() { return request.auth != null && request.auth.token.email == "YOUR_ADMIN_EMAIL"; }
+    match /orders/{id}       { allow create: if true; allow read, update, delete: if admin(); }
+    match /appointments/{id} { allow create: if true; allow read, update, delete: if admin(); }
+    match /{c}/{id} {
+      allow read: if c in ["settings","services","products","categories","banners","videos"];
+      allow write: if admin();
+    }
+  }
+}
+```
 
-## التشغيل في VS Code
-1. افتح مجلد المشروع عبر File > Open Folder.
-2. استخدم Node.js 22.13 أو أحدث وpnpm. شغّل `pnpm install` ثم `pnpm dev`.
-3. يحتاج التشغيل المحلي إلى إعداد bindings وتطبيق migrations، انظر `scripts` و`drizzle` ودليل runtime المرفق بالمهارة. في الاستضافة تُجهز Firestore وR2 وتُطبّق migrations بواسطة Sites.
-4. تسجيل الدخول للوحة يتم عبر حساب Firebase المحدد بمعرّف UID. لا تكتب كلمة المرور في أي ملف مصدر.
-5. تحتاج صور R2 والطلبات القديمة إلى bindings الاستضافة الحالية. تحقق من DEVELOPMENT.md لإعداد البيئة.
+## 2) النشر على GitHub
+1. أنشئ مستودعاً جديداً على GitHub وارفع الملفات الأربعة (index.html, admin.html, firebase-config.js, README.md).
+2. **Settings ← Pages ← Branch: main / root ← Save**. سيظهر الرابط `https://USERNAME.github.io/REPO/`.
+3. في Firebase: **Authentication ← Settings ← Authorized domains ← Add domain** وأضف `USERNAME.github.io`.
 
-## GitHub والاستضافة
-المشروع قابل للحفظ والعمل عبر GitHub وVS Code. **GitHub Pages لا يدعم خادم لوحة التحكم ورفع الصور الحالي**؛ لذلك استُبدل نشر Pages القديم بفحص يدوي / PR فقط. احتفظ بالاستضافة التي تدعم Workers وFirestore وR2 مثل بيئة Sites الحالية. نقل المشروع إلى استضافة أخرى يحتاج تهيئة تكامل الهوية وقاعدة البيانات على تلك المنصة، وليس مجرد رفع ملفات HTML.
+## 3) لوحة التحكم
+- الرابط: `.../admin.html` (غير مرتبط بأي مكان في الموقع). يمكنك تغيير اسم الملف إلى اسم سري ثم استخدامه.
+- أول خطوة: من **الإعدادات** أدخل الشعار ورقم واتساب (مثال 9665XXXXXXXX) وبيانات التواصل، ثم أضف الخدمات والمنتجات.
 
-مستودع الكود: https://github.com/hamedabdallamohamad-sudo/best-car-fixes — الموقع المستضاف يبقى منفصلًا، ورفع GitHub لا ينشر تغييرات الموقع تلقائيًا.
-
-## اختبارات
-`pnpm exec tsc --noEmit` و`pnpm build`.
-اختبارات API المحلية تشمل رفض الإدارة لغير المالك، تحقق المدخلات، حفظ الكتالوج، تعارض الإصدارات، حفظ الطلب وأسعاره من الخادم، تحديث حالته، وصور R2. لا تستخدم هوية أو بيانات عملاء حقيقية في الاختبارات المحلية.
-
-## قبل التشغيل التجاري
-- أضف رقم واتساب مع رمز الدولة دون +، والشعار والعنوان ومنتجاتك وأسعارك الحقيقية من اللوحة.
-- أمثلة المنتجات الأولية مميزة بوسم توضيحي، واحذفها أو عدّلها قبل الإطلاق.
-- جميع الطلبات عروض سعر تقديرية، ولا يوجد دفع إلكتروني أو إثبات سداد. حالة مكتمل تعني إنجاز الطلب فقط.
-- الموقع ما زال خاصًا؛ لم يتغير نطاق رؤيته. يلزم قرار مستقل لإتاحته للعملاء.
-- تغيير رقم واتساب يؤثر على الطلبات الجديدة. إرسال الرسالة اختياري من جهة العميل ولا توجد إيصالات استلام من واتساب.
-- الطلبات لا تتاح للعامة. اللوحة تعرض أحدث 1000 طلب. الصور المرفوعة متاحة لزوار الموقع حسب وصول الموقع العام؛ لا ترفع مستندات العملاء أو بيانات حساسة كصور منتجات.
-- لا ترفع `.env*` أو `.dev.vars*` أو `.wrangler` أو `node_modules` أو build outputs إلى GitHub.
-
-English: Full-stack bilingual automotive site, owner-only admin, shared catalog and orders, and customer-initiated WhatsApp checkout. No online payment and no automatic WhatsApp delivery. GitHub stores source; GitHub Pages cannot host the server/database. Keep deployment private until approved.
-
-## إعداد Firebase لهذه النسخة
-1. مشروع Firebase: `best-car-fixes-6c38d`. الإعدادات العامة في `app/firebase-config.ts`.
-2. فعّل Email/Password وأنشئ حساب الإدارة. صلاحية المدير محددة بمعرّف UID، وليس بمجرد تسجيل أي مستخدم.
-3. أنشئ قاعدة Firestore Standard `(default)` وانشر ملف `firestore.rules` كاملًا من تبويب Rules. لا تستخدم قواعد وصول مفتوح.
-4. بعد نشر النسخة الجديدة، افتح `/admin` وادخل بحساب Firebase. اضغط حفظ التغييرات لأول مرة لتهيئة الكتالوج والأسعار الموثوقة.
-5. يتيح كل طلب حتى 10 أصناف مختلفة، بحد 99 قطعة لكل صنف. القواعد تتحقق من كل سعر وكمية وإجمالي باستخدام الأسعار التي نشرها المدير.
-6. الطلبات لا يقرأها الزوار ولا يعدلونها. العميل يرسل طلبًا جديدًا فقط.
-7. تخزين الصور يبقى R2 الحالي؛ لا حاجة إلى تفعيل Firebase Storage أو Blaze من أجل هذه الصور. لا توجد مطالبة بأن استضافة الموقع مجانية إلى الأبد.
-8. اختبارات التطبيق: `node tests/firebase.integration.mjs`. هذه اختبارات لمحولات الاتصال والمنطق باستخدام استجابات محاكاة، وليست بديلًا عن نشر القواعد وتجربة Firebase الفعلية.
-9. لا يلزم Service Account أو كلمة مرور المالك في أسرار الخادم. المتغير ADMIN_EMAIL الخاص بالنسخة القديمة لم يعد يستخدم للتحقق من إدارة Firebase.
-
-الحالة: تم نشر نسخة Firebase واختبار الدخول والحفظ والطلبات وتحديث حالتها بواسطة المالك.
+## ملاحظات
+- الصور تُضغط تلقائياً وتُحفظ داخل Firestore (مجاناً)، لأن Firebase Storage يتطلب الآن خطة مدفوعة.
+- الباقة المجانية من Firestore كافية لمتجر صغير/متوسط.
