@@ -178,7 +178,7 @@ footer{text-align:start;padding-block:46px 24px}
 import * as cfg from "./firebase-config.js";
 const db=cfg.db,API=cfg.API||"";
 const post=async(p,b)=>{try{return (await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})).ok}catch(e){return false}};
-import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const T={
 en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart ✓",bookthis:"Book this service",nowa:"WhatsApp number is not set yet."},
 ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة ✓",bookthis:"احجز هذه الخدمة",nowa:"لم يتم ضبط رقم واتساب بعد."}};
@@ -295,8 +295,10 @@ $("#rf").onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData
   openWA(`🔩 Part request / طلب قطعة\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.part}`,"whatsappOrders");
   e.target.reset();rimg="";toast(tr("reqdone"))};
 render();
-const [s,sv,pr,ct,bn,vd]=await Promise.all([getDoc(doc(db,"settings","site")).then(d=>d.data()||{}).catch(()=>({})),get("services"),get("products"),get("categories"),get("banners"),get("videos")]);
-S=s;SV=sv;PR=pr;CT=ct;BN=bn;VD=vd;render();
+// تحديث مباشر: أي تغيير من لوحة التحكم يظهر فوراً دون إعادة تحميل الصفحة
+const live=(n,set)=>onSnapshot(collection(db,n),q=>{set(q.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error("Firestore:",n,e.code||e));
+live("services",v=>SV=v);live("products",v=>PR=v);live("categories",v=>CT=v);live("banners",v=>BN=v);live("videos",v=>VD=v);
+onSnapshot(doc(db,"settings","site"),d=>{S=d.data()||{};render()},e=>console.error("Firestore: settings",e.code||e));
 </script>
 </body>
 </html>

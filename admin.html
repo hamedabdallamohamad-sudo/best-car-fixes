@@ -42,6 +42,7 @@ const DN=["الأحد","الاثنين","الثلاثاء","الأربعاء","�
 const ytId=u=>(String(u||"").match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1];
 const ytI=r=>{const i=ytId(r.url);return i?`<img src="https://img.youtube.com/vi/${i}/default.jpg">`:""};
 const DEF=[["🔍","Car diagnostics","فحص الأعطال بالكمبيوتر"],["⚙️","Engine repair","إصلاح المحركات"],["🔧","Transmission repair","إصلاح ناقل الحركة"],["⚡","Electrical system repair","إصلاح الكهرباء"],["💻","Computer programming","برمجة الكمبيوتر"],["🔑","Key programming","برمجة المفاتيح"],["🛠️","General vehicle maintenance","الصيانة العامة"]];
+addEventListener("unhandledrejection",e=>{const c=(e.reason&&e.reason.code)||"";alert(c.includes("permission")?"فشل الحفظ: لا توجد صلاحية. تأكد أن UID حسابك في Authentication مطابق للمكتوب في قواعد Firestore ثم اضغط Publish.":"حدث خطأ: "+(c||e.reason))});
 let cur="settings",edit=null,img={},VL=[];
 const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="v"?`<select data-k="${k}"><option value="">—</option>${VL.map(x=>`<option value="${x.id}" ${x.id==v[k]?"selected":""}>${esc(x.title)}</option>`).join("")}</select>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
 const collect=(fs,old={})=>{const o={};fs.forEach(([k,,t])=>{const e=document.querySelector(`[data-k="${k}"]`);o[k]=t=="img"?(img[k]||old[k]||""):t=="n"?+e.value||0:e.value.trim()});return o};
@@ -65,7 +66,7 @@ async function show(){
   const cur_=rows.find(r=>r.id==edit)||{},lab=r=>r.title||r.name||r.url;
   m.innerHTML=`<div class="box"><h3>${edit?"تعديل":"إضافة"}</h3>${form(F[cur],cur_)}<button id="sv">حفظ</button>${edit?'<button class="sec" id="cn">إلغاء</button>':""}</div>
   <div class="box"><h3>${N[cur]} (${rows.length})</h3>${cur=="services"&&!rows.length?'<button class="sec" id="seed">إضافة الخدمات الافتراضية</button>':""}${rows.map(r=>`<div class="row">${r.image?`<img src="${r.image}">`:ytI(r)}<span>${esc(lab(r))}${r.price!==undefined?" – $"+r.price:""}</span><button class="sec" data-e="${r.id}">تعديل</button><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;
-  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};if(cur=="videos"&&!ytId(d.url))return alert("رابط يوتيوب غير صحيح");edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;show()};
+  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};if(cur=="videos"&&!ytId(d.url))return alert("رابط يوتيوب غير صحيح");edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;alert("تم الحفظ ✓");show()};
   if($("#cn"))$("#cn").onclick=()=>{edit=null;show()};
   if($("#seed"))$("#seed").onclick=async()=>{for(const s of DEF)await addDoc(collection(db,"services"),{icon:s[0],title:s[1],titleAr:s[2],desc:"",descAr:"",image:""});show()};
 }
