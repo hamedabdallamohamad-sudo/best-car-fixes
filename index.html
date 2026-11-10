@@ -138,7 +138,9 @@ footer{padding:26px}
 </aside>
 
 <script type="module">
-import {db} from "./firebase-config.js";
+import * as cfg from "./firebase-config.js";
+const db=cfg.db,API=cfg.API||"";
+const post=async(p,b)=>{try{return (await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})).ok}catch(e){return false}};
 import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const T={
 en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart ✓",bookthis:"Book this service",nowa:"WhatsApp number is not set yet."},
@@ -231,7 +233,8 @@ document.querySelectorAll("section[id]").forEach(s=>io.observe(s));
 $("#cartbtn").onclick=()=>$("#cart").classList.add("open");
 $("#cx").onclick=()=>$("#cart").classList.remove("open");
 $("#lang").onclick=()=>{lang=lang=="ar"?"en":"ar";localStorage.lang=lang;render()};
-$("#co").onclick=()=>{
+$("#co").onclick=async()=>{
+  if(API&&cart.length&&await post("/api/orders",{name:$("#cn").value,phone:$("#cp").value,address:$("#ca").value,items:cart.map(c=>({id:c.id,qty:c.qty}))})){cart=[];drawCart();$("#cart").classList.remove("open");return toast(tr("done"))}
   if(!cart.length)return toast(tr("empty"));
   if(!num("whatsappOrders"))return toast(tr("nowa"));
   const total=cart.reduce((a,c)=>a+c.qty*c.price,0),o={name:$("#cn").value,phone:$("#cp").value,address:$("#ca").value,items:cart,total,status:"new",createdAt:serverTimestamp()};
@@ -239,8 +242,9 @@ $("#co").onclick=()=>{
   openWA(`🛒 New order / طلب جديد\n${cart.map(c=>`• ${c.name} × ${c.qty} = $${(c.qty*c.price).toFixed(2)}`).join("\n")}\nTotal: $${total.toFixed(2)}\n${o.name} | ${o.phone}\n${o.address}`,"whatsappOrders");
   cart=[];drawCart();$("#cart").classList.remove("open");
 };
-$("#bf").onsubmit=e=>{
+$("#bf").onsubmit=async e=>{
   e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
+  if(API&&await post("/api/bookings",f)){$("#bf").reset();return toast(tr("done"))}
   addDoc(collection(db,"appointments"),{...f,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
   openWA(`🔧 Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} ${f.time} | ${f.location}\n${f.notes}`,"whatsappBookings");
   e.target.reset();toast(tr("done"));

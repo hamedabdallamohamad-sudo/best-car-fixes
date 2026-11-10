@@ -1,38 +1,47 @@
-# BESTCAR FIXES – دليل التشغيل
+# BESTCAR FIXES – Backend (Java / Spring Boot)
 
-الموقع مكتوب بـ HTML + CSS + JavaScript بسيط (بدون أي تثبيت أو build)، ويعمل مباشرة على GitHub Pages.
+خادم Java صغير يستقبل الطلبات والحجوزات من الموقع، ويفعل ما لا تستطيعه الصفحة الثابتة:
+1. **يحسب الأسعار من Firestore** (لا يمكن للعميل التلاعب بالسعر).
+2. **يحفظ الطلب في Firestore** (يظهر في لوحة التحكم كالمعتاد).
+3. **يرسل إشعار واتساب تلقائياً** إلى رقمك عبر WhatsApp Cloud API دون أن يضغط العميل إرسال.
 
-## 1) إعداد Firebase
-1. ادخل https://console.firebase.google.com ← **Add project**.
-2. **Build ← Firestore Database ← Create database** (Production mode).
-3. **Build ← Authentication ← Get started ← Email/Password ← Enable**، ثم من تبويب Users اضغط **Add user** وأنشئ حساب المدير (بريد + كلمة مرور).
-4. **Project settings ← Your apps ← Web (</>)** ← انسخ بيانات الإعداد والصقها داخل `firebase-config.js`.
-5. **Firestore ← Rules** ← الصق القواعد التالية (غيّر البريد إلى بريد المدير) ثم Publish:
+## 1) مفتاح Firebase للخادم
+Firebase Console ← Project settings ← **Service accounts** ← **Generate new private key**.
+افتح ملف JSON المحمّل وانسخ محتواه كاملاً: سيوضع في متغير البيئة `FIREBASE_CREDENTIALS_JSON`.
+**لا ترفع هذا الملف إلى GitHub أبداً.**
 
+## 2) واتساب Cloud API
+1. https://developers.facebook.com ← Create app ← نوع Business ← أضف منتج **WhatsApp**.
+2. من WhatsApp ← API Setup انسخ **Phone number ID**، وأنشئ **Access token** دائماً عبر System User (التوكن المؤقت ينتهي خلال ساعات).
+3. أنشئ **Message template** اسمه `new_request` (Category: Utility، اللغة: Arabic) ونصه مثلاً: `طلب جديد: {{1}}` ثم انتظر الموافقة.
+   - الرسائل التي يبدؤها النشاط التجاري تتطلب قالباً معتمداً، ولذلك يستخدم الخادم قالباً.
+   - الرقم التجريبي من Meta يرسل فقط إلى أرقام مضافة ومؤكدة في لوحة التطبيق.
+4. رقم المستلم يؤخذ من **إعدادات لوحة التحكم** (رقم طلبات المنتجات / رقم الصيانة / الرقم الرئيسي).
+5. راجع صفحة أسعار واتساب لدى Meta لمعرفة رسوم المحادثات الحالية.
+
+## 3) التشغيل محلياً
+Java 17 و Maven، ثم:
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    function admin() { return request.auth != null && request.auth.token.email == "YOUR_ADMIN_EMAIL"; }
-    match /orders/{id}       { allow create: if true; allow read, update, delete: if admin(); }
-    match /appointments/{id} { allow create: if true; allow read, update, delete: if admin(); }
-    match /{c}/{id} {
-      allow read: if c in ["settings","services","products","categories","banners","videos"];
-      allow write: if admin();
-    }
-  }
-}
+export FIREBASE_CREDENTIALS_JSON='{...}'
+export WHATSAPP_TOKEN=...
+export WHATSAPP_PHONE_NUMBER_ID=...
+mvn spring-boot:run
 ```
+اختبر: `http://localhost:8080/api/health`
 
-## 2) النشر على GitHub
-1. أنشئ مستودعاً جديداً على GitHub وارفع الملفات الأربعة (index.html, admin.html, firebase-config.js, README.md).
-2. **Settings ← Pages ← Branch: main / root ← Save**. سيظهر الرابط `https://USERNAME.github.io/REPO/`.
-3. في Firebase: **Authentication ← Settings ← Authorized domains ← Add domain** وأضف `USERNAME.github.io`.
+## 4) النشر (مثال: Render)
+1. ارفع مجلد `bestcar-fixes-backend` إلى مستودع GitHub **منفصل**.
+2. Render ← New ← **Web Service** ← اختر المستودع ← Runtime: **Docker**.
+3. أضف متغيرات البيئة: `FIREBASE_CREDENTIALS_JSON`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`، واختيارياً `WHATSAPP_TEMPLATE` و `WHATSAPP_TEMPLATE_LANG` و `ALLOWED_ORIGINS`.
+4. بعد النشر تحصل على رابط مثل `https://bestcar-backend.onrender.com`.
+(بدائل: Google Cloud Run، Railway. راجع خطط الاستضافة الحالية، فقد تتوقف الخطط المجانية عند الخمول فيتأخر أول طلب.)
 
-## 3) لوحة التحكم
-- الرابط: `.../admin.html` (غير مرتبط بأي مكان في الموقع). يمكنك تغيير اسم الملف إلى اسم سري ثم استخدامه.
-- أول خطوة: من **الإعدادات** أدخل الشعار ورقم واتساب (مثال 9665XXXXXXXX) وبيانات التواصل، ثم أضف الخدمات والمنتجات.
+## 5) ربط الموقع
+في ملف `firebase-config.js` في مشروع الموقع أضف سطراً:
+```js
+export const API = "https://bestcar-backend.onrender.com";
+```
+ثم ارفعه. إذا كان `API` فارغاً أو الخادم لا يعمل، يعود الموقع تلقائياً للطريقة القديمة (حفظ مباشر + رابط واتساب).
 
-## ملاحظات
-- الصور تُضغط تلقائياً وتُحفظ داخل Firestore (مجاناً)، لأن Firebase Storage يتطلب الآن خطة مدفوعة.
-- الباقة المجانية من Firestore كافية لمتجر صغير/متوسط.
+## 6) لاحقاً: تشديد الحماية
+بعد التأكد أن الخادم يعمل، يمكنك في قواعد Firestore تعطيل `allow create` العام لـ `orders` و `appointments`، فلا يُنشئهما إلا الخادم (الذي يتجاوز القواعد). لكن هذا يُلغي الطريقة الاحتياطية.
