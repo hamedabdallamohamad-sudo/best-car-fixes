@@ -12,3 +12,4 @@ export const db=getFirestore(app),auth=getAuth(app);
 
 // عنوان الخادم (Java) بعد نشره، مثال: "https://bestcar-backend.onrender.com". اتركه فارغاً لتعطيله.
 export const API="";
+export const API = "https://bestcar-backend.onrender.com";

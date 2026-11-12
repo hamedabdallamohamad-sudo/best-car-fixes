@@ -77,5 +77,5 @@ document.addEventListener("click",async e=>{const d=e.target.dataset||{};
 document.addEventListener("change",async e=>{if(e.target.dataset.s)await updateDoc(doc(db,cur,e.target.dataset.s),{status:e.target.value})});
 $("#go").onclick=()=>signInWithEmailAndPassword(auth,$("#em").value,$("#pw").value).catch(()=>$("#err").textContent="بيانات الدخول غير صحيحة");
 $("#out").onclick=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{["#login"].forEach(s=>$(s).hidden=!!u);["#tabs","#app","#out"].forEach(s=>$(s).hidden=!u);if(u)show()});
+onAuthStateChanged(auth,u=>{["#login"].forEach(s=>$(s).hidden=!!u);["#tabs","#app","#out"].forEach(s=>$(s).hidden=!u);if(u){$("header b").textContent="لوحة التحكم | "+u.email+" | UID: "+u.uid;show()}});
 </script></body></html>
