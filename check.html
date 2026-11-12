@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>فحص الموقع</title>
+<style>body{font:17px/1.8 system-ui,Tahoma,sans-serif;max-width:720px;margin:30px auto;padding:0 16px}p{margin:8px 0;padding:8px 12px;border-radius:6px;background:#f3f5f7}.ok{color:#0a7a2f}.no{color:#b3261e;font-weight:700}</style></head>
+<body><h2>فحص إعدادات الموقع</h2><div id="o"><p>جارٍ الفحص…</p></div>
+<script type="module">
+const o=document.getElementById("o");o.innerHTML="";
+const log=(ok,t)=>o.insertAdjacentHTML("beforeend",`<p class="${ok?"ok":"no"}">${ok?"✔":"✘"} ${t}</p>`);
+let m;
+try{m=await import("./firebase-config.js");log(true,"ملف firebase-config.js موجود ويُحمَّل")}
+catch(e){log(false,"تعذّر تحميل firebase-config.js أو مكتبات Firebase: "+e.message+" ← تأكد أن الملف مرفوع على GitHub بنفس الاسم وبدون أخطاء");throw e}
+log(!!m.db,m.db?"الملف يصدّر db":"الملف لا يصدّر db ← الصق محتوى firebase-config.js الصحيح");
+log(!!m.auth,m.auth?"الملف يصدّر auth":"الملف لا يصدّر auth ← الصق محتوى firebase-config.js الصحيح");
+if(!m.db)throw 0;
+const opt=m.db.app.options;
+log(!String(opt.apiKey).startsWith("YOUR"),"المشروع: "+opt.projectId+(String(opt.apiKey).startsWith("YOUR")?" ← ما زالت القيم YOUR_… بدون تعديل":""));
+const F=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+for(const c of ["settings","services","products"]){
+  try{const s=await F.getDocs(F.collection(m.db,c));log(true,"قراءة «"+c+"» نجحت — عدد المستندات: "+s.size)}
+  catch(e){log(false,"فشلت قراءة «"+c+"»: "+(e.code||e.message)+(String(e.code).includes("permission")?" ← قواعد Firestore لم تُنشر أو لا تسمح بالقراءة":""))}
+}
+</script></body></html>
