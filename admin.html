@@ -75,7 +75,7 @@ document.addEventListener("click",async e=>{const d=e.target.dataset||{};
   if(d.e){edit=d.e;show();scrollTo(0,0)}
   if(d.d&&confirm("هل أنت متأكد من الحذف؟")){await deleteDoc(doc(db,cur,d.d));show()}});
 document.addEventListener("change",async e=>{if(e.target.dataset.s)await updateDoc(doc(db,cur,e.target.dataset.s),{status:e.target.value})});
-$("#go").onclick=()=>signInWithEmailAndPassword(auth,$("#em").value,$("#pw").value).catch(()=>$("#err").textContent="بيانات الدخول غير صحيحة");
+$("#go").onclick=()=>signInWithEmailAndPassword(auth,$("#em").value,$("#pw").value).catch(e=>{const c=e.code||"";$("#err").textContent=/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?"البريد أو كلمة المرور غير صحيحة، أو لا يوجد مستخدم بهذا البريد":c.includes("operation-not-allowed")?"طريقة Email/Password غير مفعّلة في Firebase":c.includes("unauthorized-domain")?"النطاق غير مضاف في Authorized domains":c.includes("api-key")?"مفتاح Firebase في firebase-config.js غير صحيح":"تعذر الدخول: "+c});
 $("#out").onclick=()=>signOut(auth);
 onAuthStateChanged(auth,u=>{["#login"].forEach(s=>$(s).hidden=!!u);["#tabs","#app","#out"].forEach(s=>$(s).hidden=!u);if(u){$("header b").textContent="لوحة التحكم | "+u.email+" | UID: "+u.uid;show()}});
 </script></body></html>
