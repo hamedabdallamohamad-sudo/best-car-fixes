@@ -6,6 +6,7 @@
 <title>BESTCAR FIXES – Car Services & Spare Parts</title>
 <meta name="description" content="Car diagnostics, engine & transmission repair, key programming and genuine spare parts. Book online or order via WhatsApp.">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root{--bg:#eceff1;--c:#fff;--n:#12263a;--o:#e8431a;--t:#1d2733;--m:#5f6b78;--l:#d5dbe0}
 *{box-sizing:border-box;margin:0}
@@ -95,7 +96,13 @@ h2{font-size:clamp(28px,4vw,38px);margin-bottom:30px}
 .cp{border-top:1px solid #ffffff22;padding-top:16px;text-align:center;font-size:14px}
 footer{text-align:start;padding-block:46px 24px}
 @media(max-width:800px){.gauge{display:none}.fg{grid-template-columns:1fr}.hero{padding-block:80px 90px}}
-@media(prefers-reduced-motion:reduce){.needle{animation:none}.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
+.soc{display:flex;gap:10px;flex-wrap:wrap}.soc:empty{display:none}
+.soc a{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--n);color:#fff;font-size:21px;text-decoration:none;transition:transform .15s,background .15s}
+.soc a:hover{transform:translateY(-3px)}
+.s-facebook:hover{background:#1877f2!important}.s-instagram:hover{background:#d62976!important}.s-tiktok:hover{background:#000!important}
+.s-youtube:hover{background:#f00!important}.s-twitter:hover{background:#000!important}.s-snapchat:hover{background:#fffc00!important;color:#000!important}.s-whatsapp:hover{background:#25d366!important}
+.fg .soc a{display:grid;padding:0;color:#fff;background:#ffffff1f}
+@media(prefers-reduced-motion:reduce){.soc a{transition:none}.needle{animation:none}.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -161,7 +168,7 @@ footer{text-align:start;padding-block:46px 24px}
 </form></section>
 
 <section id="videos"><h2 data-i="videos"></h2><div class="grid" id="vd"></div></section>
-<section id="contact"><h2 data-i="contact"></h2><div class="contact" id="ct"></div><div id="hr"></div><div id="mp"></div></section>
+<section id="contact"><h2 data-i="contact"></h2><div class="contact" id="ct"></div><div class="soc" id="sc" style="margin-top:18px"></div><div id="hr"></div><div id="mp"></div></section>
 <div class="stripe"></div><footer id="ft"></footer>
 
 <div id="toast" role="status"></div>
@@ -191,6 +198,10 @@ let cart=[];try{cart=JSON.parse(localStorage.cart||"[]")}catch(e){}
 const DN={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ar:["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]};
 const vl=p=>{const v=VD.find(x=>x.id==p.video);return v?`<a href="${esc(v.url)}" target="_blank" rel="noopener">▶ ${tr("watch")}</a>`:""};
 const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
+const SOC={facebook:["fa-facebook-f","Facebook","https://facebook.com/"],instagram:["fa-instagram","Instagram","https://instagram.com/"],tiktok:["fa-tiktok","TikTok","https://tiktok.com/@"],youtube:["fa-youtube","YouTube","https://youtube.com/@"],twitter:["fa-x-twitter","X","https://x.com/"],snapchat:["fa-snapchat","Snapchat","https://snapchat.com/add/"]};
+const fixUrl=(k,v)=>{v=(v||"").trim();if(!v)return"";if(/^https?:\/\//i.test(v))return v;if(/^(www\.|[\w-]+\.(com|net|tv|be|me|co)\b)/i.test(v))return"https://"+v.replace(/^\/+/,"");return SOC[k][2]+v.replace(/^@/,"")};
+const socHtml=()=>Object.keys(SOC).filter(k=>S[k]).map(k=>`<a class="s-${k}" href="${esc(fixUrl(k,S[k]))}" target="_blank" rel="noopener noreferrer" aria-label="${SOC[k][1]}" title="${SOC[k][1]}"><i class="fa-brands ${SOC[k][0]}"></i></a>`).join("")+(wa()?`<a class="s-whatsapp" href="https://wa.me/${wa()}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`:"");
+const mapHref=()=>S.mapUrl?(/^https?:\/\//i.test(S.mapUrl)?S.mapUrl:"https://"+S.mapUrl.replace(/^\/+/,"")):"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(S.mapQuery||pk(S,"address"));
 const wa=()=>(S.whatsapp||"").replace(/\D/g,"");
 const num=k=>((S[k]||S.whatsapp||"")+"").replace(/\D/g,"");
 const openWA=(t,k)=>{const n=num(k);if(!n){toast(tr("nowa"));return}window.open("https://wa.me/"+n+"?text="+encodeURIComponent(t),"_blank")};
@@ -223,15 +234,15 @@ function render(){
   if(wa())L.push(`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener">💬 ${tr("wa")}</a>`);
   if(S.phone)L.push(`<a href="tel:${esc(S.phone)}">📞 ${esc(S.phone)}</a>`);
   if(S.email)L.push(`<a href="mailto:${esc(S.email)}">✉️ ${esc(S.email)}</a>`);
-  if(S.address||S.addressAr)L.push(`<a href="${esc(S.mapUrl||"#")}" target="_blank" rel="noopener">📍 ${esc(pk(S,"address"))}</a>`);
-  [["facebook","Facebook"],["instagram","Instagram"],["tiktok","TikTok"],["youtube","YouTube"]].forEach(([k,n])=>S[k]&&L.push(`<a href="${esc(S[k])}" target="_blank" rel="noopener">${n}</a>`));
-  $("#ct").innerHTML=L.join("");
+  if(S.address||S.addressAr)L.push(`<a href="${esc(mapHref())}" target="_blank" rel="noopener">📍 ${esc(pk(S,"address"))}</a>`);
+
+  $("#ct").innerHTML=L.join("");$("#sc").innerHTML=socHtml();
   const hh=S.hours?DN[lang].map((n,i)=>{const h=S.hours[i]||{};return `<div>${n}: ${h.x?tr("closed"):esc((h.o||"")+" – "+(h.c||""))}</div>`}).join(""):"";
   $("#hr").innerHTML=hh?`<h3 style="margin:22px 0 8px">${tr("hours")}</h3><div class="contact">${hh}</div>`:"";
   const mq=S.mapQuery||pk(S,"address");
   if($("#mp").dataset.q!=mq){$("#mp").dataset.q=mq;$("#mp").innerHTML=mq?`<iframe title="map" loading="lazy" style="width:100%;height:300px;border:0;margin-top:20px;border-radius:4px" src="https://maps.google.com/maps?q=${encodeURIComponent(mq)}&output=embed"></iframe>`:""}
   $("#fwa").hidden=!wa();if(wa())$("#fwa").href="https://wa.me/"+wa();
-  $("#ft").innerHTML=`<div class="fg"><div><b>${esc(nm)}</b><p>${esc(pk(S,"desc")||tr("tag"))}</p></div><div>${["services","store","request","book"].map(k=>`<a href="#${k}">${tr(k)}</a>`).join("")}</div><div>${S.phone?`<a href="tel:${esc(S.phone)}">📞 ${esc(S.phone)}</a>`:""}${S.email?`<a href="mailto:${esc(S.email)}">✉️ ${esc(S.email)}</a>`:""}${wa()?`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener">💬 ${tr("wa")}</a>`:""}</div></div><p class="cp">© ${new Date().getFullYear()} ${esc(nm)}</p>`;
+  $("#ft").innerHTML=`<div class="fg"><div><b>${esc(nm)}</b><p>${esc(pk(S,"desc")||tr("tag"))}</p></div><div>${["services","store","request","book"].map(k=>`<a href="#${k}">${tr(k)}</a>`).join("")}</div><div>${S.phone?`<a href="tel:${esc(S.phone)}">📞 ${esc(S.phone)}</a>`:""}${S.email?`<a href="mailto:${esc(S.email)}">✉️ ${esc(S.email)}</a>`:""}${wa()?`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener">💬 ${tr("wa")}</a>`:""}<div class="soc" style="margin-top:10px">${socHtml()}</div></div></div><p class="cp">© ${new Date().getFullYear()} ${esc(nm)}</p>`;
   drawCart();
 }
 function drawCart(){
