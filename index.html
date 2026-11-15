@@ -120,6 +120,13 @@ section{padding-block:48px}
 .tiles a i{color:var(--o);font-size:22px}.contact a i,.fg a i{margin-inline-end:8px;color:var(--o)}.fg a i{color:#e8431a}
 .im i{font-size:inherit}.fg .soc a i{margin:0;color:#fff}.soc a i{color:inherit}
 @media(max-width:700px){.svc{padding:14px}.svc .ico{width:42px;height:42px;font-size:18px}.svc h3{font-size:16px}}
+.qty{flex-wrap:wrap}.step{display:flex}
+.step .qb{background:var(--n);padding:8px 14px;border-radius:4px 0 0 4px}.step .qb:last-child{border-radius:0 4px 4px 0}
+[dir=rtl] .step .qb{border-radius:0 4px 4px 0}[dir=rtl] .step .qb:last-child{border-radius:4px 0 0 4px}
+.step input{width:52px;text-align:center;border-radius:0;padding:8px 0}.qty>button{flex:1 1 110px}
+.im{position:relative}.bd{position:absolute;bottom:8px;inset-inline-start:8px;background:#12263acc;color:#fff;font:600 13px Cairo,sans-serif;padding:3px 10px;border-radius:12px}
+.gt{display:flex;gap:6px;padding:8px 14px 0;overflow-x:auto}.gt button{flex:0 0 64px;height:64px;padding:0;background:#dfe5ea center/cover;border:2px solid var(--l);border-radius:4px}.gt button:hover{border-color:var(--o)}
+.vids{display:grid;gap:10px;margin:6px 0}.vt,.vids iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:4px;background:#000 center/cover;color:#fff;font-size:36px;padding:0}
 @media(prefers-reduced-motion:reduce){.svc{transition:none}.svc:hover{transform:none}.soc a{transition:none}.needle{animation:none}.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
 </style>
 </head>
@@ -217,6 +224,10 @@ const get=async n=>{try{return(await getDocs(collection(db,n))).docs.map(d=>({id
 let lang=localStorage.lang||"en",S={},SV=[],PR=[],CT=[],BN=[],VD=[],cat="";
 let cart=[];try{cart=JSON.parse(localStorage.cart||"[]")}catch(e){}
 const DN={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ar:["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]};
+const imgsOf=p=>p.images&&p.images.length?p.images:(p.image?[p.image]:[]);
+const ytIds=p=>String(p.videoUrls||"").split(/\s+/).map(u=>(u.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1]).filter(Boolean);
+const qty=(id,pid,att)=>`<div class="qty"><div class="step"><button type="button" class="qb" data-q="-1" aria-label="-">−</button><input type="number" min="1" max="99" value="1" id="${id}"><button type="button" class="qb" data-q="1" aria-label="+">+</button></div><button data-${att}="${pid}">${tr("add")}</button></div>`;
+let GI=[];
 const vl=p=>{const v=VD.find(x=>x.id==p.video);return v?`<a href="${esc(v.url)}" target="_blank" rel="noopener"><i class="fa-solid fa-play"></i> ${tr("watch")}</a>`:""};
 const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
 const SOC={facebook:["fa-facebook-f","Facebook","https://facebook.com/"],instagram:["fa-instagram","Instagram","https://instagram.com/"],tiktok:["fa-tiktok","TikTok","https://tiktok.com/@"],youtube:["fa-youtube","YouTube","https://youtube.com/@"],twitter:["fa-x-twitter","X","https://x.com/"],snapchat:["fa-snapchat","Snapchat","https://snapchat.com/add/"]};
@@ -251,7 +262,7 @@ function render(){
   const q=($("#qs").value||"").toLowerCase();
   let ps=PR.filter(p=>(!cat||p.category==cat)&&(!q||((p.name||"")+" "+(p.nameAr||"")+" "+(p.desc||"")+" "+(p.descAr||"")).toLowerCase().includes(q)));
   const so=$("#so").value;if(so)ps=[...ps].sort((a,b)=>so=="a"?a.price-b.price:b.price-a.price);
-  $("#pr").innerHTML=ps.length?ps.map(p=>`<div class="card"><div class="im" data-v="${p.id}" style="cursor:pointer;${p.image?`background-image:url(${p.image})`:""}">${p.image?"":'<i class="fa-solid fa-gear"></i>'}</div><div class="b"><h3 data-v="${p.id}" style="cursor:pointer">${esc(pk(p,"name"))}</h3><p>${esc(pk(p,"desc"))}</p>${vl(p)}<div class="price">$${Number(p.price||0).toFixed(2)}</div><div class="qty"><input type="number" min="1" value="1" id="q${p.id}"><button data-a="${p.id}">${tr("add")}</button></div></div></div>`).join(""):`<p>${tr("noitems")}</p>`;
+  $("#pr").innerHTML=ps.length?ps.map(p=>{const im=imgsOf(p),vn=ytIds(p).length;return `<div class="card"><div class="im" data-v="${p.id}" style="cursor:pointer;${im[0]?`background-image:url(${im[0]})`:""}">${im[0]?"":'<i class="fa-solid fa-gear"></i>'}${im.length>1||vn?`<span class="bd">${im.length>1?`<i class="fa-solid fa-images"></i> ${im.length}`:""}${vn?` <i class="fa-solid fa-play"></i>`:""}</span>`:""}</div><div class="b"><h3 data-v="${p.id}" style="cursor:pointer">${esc(pk(p,"name"))}</h3><p>${esc(pk(p,"desc"))}</p>${vl(p)}<div class="price">$${Number(p.price||0).toFixed(2)}</div>${qty("q"+p.id,p.id,"a")}</div></div>`}).join(""):`<p>${tr("noitems")}</p>`;
   $("#vd").innerHTML=VD.map(v=>{const i=yt(v.url);return i?`<a class="card" href="${esc(v.url)}" target="_blank" rel="noopener"><div class="im" style="background-image:url(https://img.youtube.com/vi/${i}/hqdefault.jpg)"><i class="fa-solid fa-play"></i></div><div class="b"><b>${esc(v.title)}</b></div></a>`:""}).join("");
   const L=[];
   if(wa())L.push(`<a href="https://wa.me/${wa()}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${tr("wa")}</a>`);
@@ -285,11 +296,15 @@ document.addEventListener("click",e=>{
   if(d.p!==undefined||d.m!==undefined)drawCart();
 });
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2400)};
-const showP=id=>{const p=PR.find(x=>x.id==id);if(!p)return;
-  $("#mc").innerHTML=`<div class="im" style="${p.image?`background-image:url(${p.image})`:""}">${p.image?"":'<i class="fa-solid fa-gear"></i>'}</div><div class="b"><h2>${esc(pk(p,"name"))}</h2><p>${esc(pk(p,"desc"))}</p>${vl(p)}<div class="price">$${Number(p.price||0).toFixed(2)}</div><div class="qty"><input type="number" min="1" value="1" id="mq"><button data-ma="${p.id}">${tr("add")}</button></div></div>`;
+const showP=id=>{const p=PR.find(x=>x.id==id);if(!p)return;GI=imgsOf(p);const ids=ytIds(p);
+  $("#mc").innerHTML=`<div class="im" id="gm" style="${GI[0]?`background-image:url(${GI[0]})`:""}">${GI[0]?"":'<i class="fa-solid fa-gear"></i>'}</div>${GI.length>1?`<div class="gt">${GI.map((u,i)=>`<button type="button" data-g="${i}" style="background-image:url(${u})"></button>`).join("")}</div>`:""}<div class="b"><h2>${esc(pk(p,"name"))}</h2><p>${esc(pk(p,"desc"))}</p>${vl(p)}${ids.length?`<div class="vids">${ids.map(i=>`<button type="button" class="vt" data-yt="${i}" style="background-image:url(https://img.youtube.com/vi/${i}/hqdefault.jpg)"><i class="fa-solid fa-play"></i></button>`).join("")}</div>`:""}<div class="price">$${Number(p.price||0).toFixed(2)}</div>${qty("mq",p.id,"ma")}</div>`;
   $("#md").hidden=false};
+new MutationObserver(()=>{if($("#md").hidden)$("#mc").innerHTML=""}).observe($("#md"),{attributes:true,attributeFilter:["hidden"]});
 document.addEventListener("click",e=>{
   const v=e.target.closest("[data-v]");if(v)showP(v.dataset.v);
+  const g=e.target.closest("[data-g]");if(g)$("#gm").style.backgroundImage=`url(${GI[g.dataset.g]})`;
+  const y=e.target.closest("[data-yt]");if(y)y.outerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${y.dataset.yt}?autoplay=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="video"></iframe>`;
+  const qb=e.target.closest(".qb");if(qb){const i=qb.closest(".qty").querySelector("input");i.value=Math.max(1,Math.min(99,(+i.value||1)+(+qb.dataset.q)))}
   const s=e.target.closest("[data-s]");if(s){$("#bs").value=s.dataset.s;$("#book").scrollIntoView({behavior:"smooth"})}
   const m=e.target.closest("[data-ma]");
   if(m){const p=PR.find(x=>x.id==m.dataset.ma),q=Math.max(1,+$("#mq").value||1),c=cart.find(x=>x.id==p.id);

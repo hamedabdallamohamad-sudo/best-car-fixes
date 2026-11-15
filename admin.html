@@ -19,6 +19,7 @@ input,textarea,select{padding:9px;border:1px solid #b8c1ca;border-radius:4px;fon
 .row img{height:38px;width:38px;object-fit:cover;border-radius:4px}
 .del{background:#a61e1e}.sec{background:#12263a}
 #login{max-width:360px;margin:12vh auto;grid-template-columns:1fr}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}.tb{position:relative}.tb img{width:70px;height:70px;object-fit:cover;border-radius:4px;border:1px solid #d5dbe0}.tb button{position:absolute;top:-7px;inset-inline-end:-7px;padding:0 7px;border-radius:50%;font-size:15px;background:#a61e1e}
 </style></head>
 <body>
 <header><b>لوحة التحكم – BESTCAR FIXES</b><button id="out" hidden>تسجيل الخروج</button></header>
@@ -34,7 +35,7 @@ const F={
 settings:[["name","اسم الشركة (EN)"],["nameAr","اسم الشركة (AR)"],["desc","وصف الشركة (EN)","t"],["descAr","وصف الشركة (AR)","t"],["logo","الشعار","img"],["heroImage","صورة غلاف الصفحة الرئيسية (عريضة)","img"],["whatsapp","رقم واتساب الرئيسي (بالمفتاح الدولي، أرقام فقط)"],["whatsappOrders","رقم واتساب لطلبات المنتجات وقطع الغيار (اختياري، وإلا يُستخدم الرقم الرئيسي)"],["whatsappBookings","رقم واتساب لطلبات الصيانة والحجز (اختياري، وإلا يُستخدم الرقم الرئيسي)"],["phone","رقم الهاتف"],["email","البريد الإلكتروني"],["address","عنوان الورشة (EN)"],["addressAr","عنوان الورشة (AR)"],["locations","مواقع الورش للحجز (سطر لكل موقع)","t"],["mapUrl","رابط الموقع على الخريطة"],["mapQuery","عنوان أو إحداثيات الخريطة (مثال: 24.47,39.61)"],["facebook","فيسبوك (الرابط أو اسم الصفحة)"],["instagram","انستغرام (الرابط أو اسم الحساب)"],["tiktok","تيك توك (الرابط أو اسم الحساب)"],["youtube","يوتيوب (رابط القناة أو @اسم القناة)"],["twitter","X / تويتر (الرابط أو اسم الحساب)"],["snapchat","سناب شات (الرابط أو اسم الحساب)"]],
 banners:[["title","العنوان (EN)"],["titleAr","العنوان (AR)"],["text","النص (EN)"],["textAr","النص (AR)"],["image","الصورة","img"]],
 services:[["title","اسم الخدمة (EN)"],["titleAr","اسم الخدمة (AR)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["image","الصورة","img"]],
-products:[["name","اسم المنتج (EN)"],["nameAr","اسم المنتج (AR)"],["price","السعر ($)","n"],["category","التصنيف (نفس اسم التصنيف EN)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["video","فيديو مرتبط بالمنتج","v"],["image","الصورة","img"]],
+products:[["name","اسم المنتج (EN)"],["nameAr","اسم المنتج (AR)"],["price","السعر ($)","n"],["category","التصنيف (نفس اسم التصنيف EN)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["videoUrls","روابط فيديوهات يوتيوب لشرح المنتج (رابط في كل سطر)","t"],["video","فيديو مرتبط من قسم الفيديوهات","v"],["images","صور المنتج (حتى 5 صور، الأولى هي الرئيسية)","imgs"]],
 categories:[["name","اسم التصنيف (EN)"],["nameAr","اسم التصنيف (AR)"]],
 videos:[["title","عنوان الفيديو"],["url","رابط يوتيوب"]]};
 const N={settings:"الإعدادات",banners:"العروض",services:"الخدمات",products:"المنتجات",categories:"التصنيفات",videos:"الفيديوهات",orders:"الطلبات",appointments:"المواعيد",partRequests:"طلبات القطع",schedule:"أوقات العمل"};
@@ -44,11 +45,13 @@ const ytI=r=>{const i=ytId(r.url);return i?`<img src="https://img.youtube.com/vi
 const DD=[["Computer scan to find faults fast and accurately.","فحص بالكمبيوتر لتحديد الأعطال بسرعة ودقة."],["Repair and overhaul for all engine types.","إصلاح وصيانة شاملة لجميع أنواع المحركات."],["Gearbox repair for automatic and manual cars.","إصلاح ناقل الحركة الأوتوماتيك والعادي."],["Wiring, sensors, alternator and battery faults.","أعطال الأسلاك والحساسات والدينامو والبطارية."],["ECU programming and software updates.","برمجة وحدة التحكم وتحديث البرامج."],["Key programming and replacement for most models.","برمجة المفاتيح وتبديلها لمعظم الموديلات."],["Periodic service, oil change and full inspection.","صيانة دورية وتغيير زيت وفحص شامل."]];
 const DEF=[["fa-gauge-high","Car diagnostics","فحص الأعطال بالكمبيوتر"],["fa-gears","Engine repair","إصلاح المحركات"],["fa-gear","Transmission repair","إصلاح ناقل الحركة"],["fa-bolt","Electrical system repair","إصلاح الكهرباء"],["fa-microchip","Computer programming","برمجة الكمبيوتر"],["fa-key","Key programming","برمجة المفاتيح"],["fa-screwdriver-wrench","General vehicle maintenance","الصيانة العامة"]];
 addEventListener("unhandledrejection",e=>{const c=(e.reason&&e.reason.code)||"";alert(c.includes("permission")?"فشل الحفظ: لا توجد صلاحية. تأكد أن UID حسابك في Authentication مطابق للمكتوب في قواعد Firestore ثم اضغط Publish.":"حدث خطأ: "+(c||e.reason))});
-let cur="settings",edit=null,img={},VL=[];
-const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="v"?`<select data-k="${k}"><option value="">—</option>${VL.map(x=>`<option value="${x.id}" ${x.id==v[k]?"selected":""}>${esc(x.title)}</option>`).join("")}</select>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
-const collect=(fs,old={})=>{const o={};fs.forEach(([k,,t])=>{const e=document.querySelector(`[data-k="${k}"]`);o[k]=t=="img"?(img[k]||old[k]||""):t=="n"?+e.value||0:e.value.trim()});return o};
+let cur="settings",edit=null,img={},VL=[],IM=[];
+const thumbs=()=>IM.map((u,i)=>`<span class="tb"><img src="${u}"><button type="button" data-rm="${i}">×</button></span>`).join("");
+const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="imgs"?`<input type=file multiple accept="image/*" data-fm="${k}"><div class="thumbs" id="th_${k}">${thumbs()}</div>`:t=="v"?`<select data-k="${k}"><option value="">—</option>${VL.map(x=>`<option value="${x.id}" ${x.id==v[k]?"selected":""}>${esc(x.title)}</option>`).join("")}</select>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
+const collect=(fs,old={})=>{const o={};fs.forEach(([k,,t])=>{const e=document.querySelector(`[data-k="${k}"]`);o[k]=t=="imgs"?[...IM]:t=="img"?(img[k]||old[k]||""):t=="n"?+e.value||0:e.value.trim()});return o};
 const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/webp",.8))};i.src=URL.createObjectURL(file)});
-document.addEventListener("change",async e=>{const k=e.target.dataset.f;if(!k)return;img[k]=await toData(e.target.files[0],k=="logo"?400:k=="heroImage"?1600:800);const p=$("#pv_"+k);p.src=img[k];p.hidden=false});
+document.addEventListener("change",async e=>{if(e.target.dataset.fm){for(const f of [...e.target.files].slice(0,Math.max(0,5-IM.length)))IM.push(await toData(f,700));$("#th_images").innerHTML=thumbs();e.target.value="";return}
+  const k=e.target.dataset.f;if(!k)return;img[k]=await toData(e.target.files[0],k=="logo"?400:k=="heroImage"?1600:800);const p=$("#pv_"+k);p.src=img[k];p.hidden=false});
 const list=async n=>(await getDocs(query(collection(db,n),...(n=="orders"||n=="appointments"||n=="partRequests"?[orderBy("createdAt","desc")]:[])))).docs.map(d=>({id:d.id,...d.data()}));
 async function show(){
   $("#tabs").innerHTML=Object.keys(N).map(k=>`<button class="${k==cur?"on":""}" data-t="${k}">${N[k]}</button>`).join("");
@@ -65,13 +68,15 @@ async function show(){
   if(cur=="products")VL=await list("videos");
   if(cur=="products")$("#cats").innerHTML=(await list("categories")).map(c=>`<option value="${esc(c.name)}">`).join("");
   const cur_=rows.find(r=>r.id==edit)||{},lab=r=>r.title||r.name||r.url;
+  IM=[...(cur_.images||(cur_.image?[cur_.image]:[]))];
   m.innerHTML=`<div class="box"><h3>${edit?"تعديل":"إضافة"}</h3>${form(F[cur],cur_)}<button id="sv">حفظ</button>${edit?'<button class="sec" id="cn">إلغاء</button>':""}</div>
   <div class="box"><h3>${N[cur]} (${rows.length})</h3>${cur=="services"&&!rows.length?'<button class="sec" id="seed">إضافة الخدمات الافتراضية</button>':""}${rows.map(r=>`<div class="row">${r.image?`<img src="${r.image}">`:ytI(r)}<span>${esc(lab(r))}${r.price!==undefined?" – $"+r.price:""}</span><button class="sec" data-e="${r.id}">تعديل</button><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;
-  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};if(cur=="videos"&&!ytId(d.url))return alert("رابط يوتيوب غير صحيح");edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;alert("تم الحفظ ✓");show()};
+  $("#sv").onclick=async()=>{const d={...collect(F[cur],cur_)};if(cur=="videos"&&!ytId(d.url))return alert("رابط يوتيوب غير صحيح");if(cur=="products"){d.image=(d.images||[])[0]||"";if(JSON.stringify(d).length>950000)return alert("حجم الصور كبير جداً، قلّل عدد الصور أو استخدم صوراً أصغر.")}edit?await updateDoc(doc(db,cur,edit),d):await addDoc(collection(db,cur),d);edit=null;alert("تم الحفظ ✓");show()};
   if($("#cn"))$("#cn").onclick=()=>{edit=null;show()};
   if($("#seed"))$("#seed").onclick=async()=>{for(const [i,s] of DEF.entries())await addDoc(collection(db,"services"),{icon:s[0],title:s[1],titleAr:s[2],desc:DD[i][0],descAr:DD[i][1],image:""});show()};
 }
 document.addEventListener("click",async e=>{const d=e.target.dataset||{};
+  if(d.rm!==undefined){IM.splice(+d.rm,1);$("#th_images").innerHTML=thumbs()}
   if(d.t){cur=d.t;edit=null;show()}
   if(d.e){edit=d.e;show();scrollTo(0,0)}
   if(d.d&&confirm("هل أنت متأكد من الحذف؟")){await deleteDoc(doc(db,cur,d.d));show()}});
