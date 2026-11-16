@@ -127,6 +127,10 @@ section{padding-block:48px}
 .im{position:relative}.bd{position:absolute;bottom:8px;inset-inline-start:8px;background:#12263acc;color:#fff;font:600 13px Cairo,sans-serif;padding:3px 10px;border-radius:12px}
 .gt{display:flex;gap:6px;padding:8px 14px 0;overflow-x:auto}.gt button{flex:0 0 64px;height:64px;padding:0;background:#dfe5ea center/cover;border:2px solid var(--l);border-radius:4px}.gt button:hover{border-color:var(--o)}
 .vids{display:grid;gap:10px;margin:6px 0}.vt,.vids iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:4px;background:#000 center/cover;color:#fff;font-size:36px;padding:0}
+.fm{display:grid;grid-template-columns:1fr;gap:12px;padding:22px;max-width:none}.fm h2{margin-bottom:0}.fm a{color:var(--o)}
+.stt{display:inline-block;padding:1px 10px;border-radius:12px;font-size:12px;background:#e3e8ec}.st-processing{background:#ffe7b3}.st-ready{background:#cfe8ff}.st-done{background:#c8f0d2}
+.hrow{border-bottom:1px solid var(--l);padding:8px 0;font-size:14px}
+@media(max-width:700px){#acc span{display:none}}
 @media(prefers-reduced-motion:reduce){.svc{transition:none}.svc:hover{transform:none}.soc a{transition:none}.needle{animation:none}.tiles a{transition:none}.tiles a:hover{transform:none}#cart,.card,#toast{transition:none}.bump{animation:none}.card:hover{transform:none}}
 </style>
 </head>
@@ -134,6 +138,7 @@ section{padding-block:48px}
 <header>
   <a class="brand" href="#top"><img id="logo" alt="" hidden><b id="sname">BESTCAR FIXES</b></a>
   <nav><a href="#services" data-i="services"></a><a href="#store" data-i="store"></a><a href="#request" data-i="request"></a><a href="#book" data-i="book"></a><a href="#videos" data-i="videos"></a><a href="#contact" data-i="contact"></a></nav>
+  <button class="ghost" id="acc" aria-label="account"></button>
   <button class="ghost" id="lang">العربية</button>
   <button id="cartbtn"><i class="fa-solid fa-cart-shopping"></i> <span id="cc">0</span></button>
 </header>
@@ -208,12 +213,13 @@ section{padding-block:48px}
 
 <script type="module">
 import * as cfg from "./firebase-config.js";
+import {onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const db=cfg.db,API=cfg.API||"";
 const post=async(p,b)=>{try{return (await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})).ok}catch(e){return false}};
-import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,getDocs,getDoc,doc,addDoc,serverTimestamp,onSnapshot,setDoc,query,where} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const T={
-en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart",bookthis:"Book this service",nowa:"WhatsApp number is not set yet."},
-ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة",bookthis:"احجز هذه الخدمة",nowa:"لم يتم ضبط رقم واتساب بعد."}};
+en:{services:"Services",store:"Spare Parts",book:"Book Maintenance",videos:"Videos",contact:"Contact",tag:"Diagnostics, repairs and genuine spare parts for your car.",all:"All",add:"Add to cart",cart:"Your cart",total:"Total",order:"Order via WhatsApp",empty:"Your cart is empty.",name:"Full name",phone:"Phone number",make:"Vehicle make & model",year:"Vehicle year",service:"Required service",date:"Preferred date",loc:"Workshop location",notes:"Additional notes",send:"Book appointment",addr:"Delivery address",done:"Request sent. We will contact you soon.",noitems:"No products yet.",wa:"WhatsApp",call:"Call",mail:"Email",pos:"Location",request:"Request a Part",part:"Part needed (name, number, details)",photo:"Part photo",sendreq:"Send request",reqdone:"Part request sent.",time:"Time",hours:"Working hours",closed:"Closed",closedday:"The workshop is closed on this day. Please choose another date.",watch:"Watch video",search:"Search parts…",sortd:"Sort",lo:"Price: low to high",hi:"Price: high to low",added:"Added to cart",bookthis:"Book this service",nowa:"WhatsApp number is not set yet.",acc_login:"Sign in",acc_reg:"Create account",acc_out:"Sign out",email:"Email",pw:"Password (min 6 characters)",noacc:"No account? Create one",haveacc:"Already have an account? Sign in",forgot:"Forgot password?",resetsent:"Password reset email sent.",needmail:"Enter your email first.",save:"Save details",saved:"Saved.",myorders:"My orders",mybook:"My bookings",myparts:"My part requests",none:"Nothing yet.",badcred:"Wrong email or password.",emailused:"This email is already registered.",weakpw:"Password must be at least 6 characters.",welcome:"Welcome!",st_new:"Received",st_processing:"In progress",st_ready:"Ready",st_done:"Completed"},
+ar:{services:"الخدمات",store:"قطع الغيار",book:"حجز موعد صيانة",videos:"الفيديوهات",contact:"تواصل معنا",tag:"فحص وإصلاح وقطع غيار أصلية لسيارتك.",all:"الكل",add:"أضف للسلة",cart:"سلة المشتريات",total:"الإجمالي",order:"إرسال الطلب عبر واتساب",empty:"السلة فارغة.",name:"الاسم الكامل",phone:"رقم الهاتف",make:"نوع وموديل السيارة",year:"سنة الصنع",service:"الخدمة المطلوبة",date:"التاريخ المفضل",loc:"موقع الورشة",notes:"ملاحظات إضافية",send:"احجز الموعد",addr:"عنوان التوصيل",done:"تم إرسال الطلب، سنتواصل معك قريباً.",noitems:"لا توجد منتجات بعد.",wa:"واتساب",call:"اتصال",mail:"البريد",pos:"الموقع",request:"اطلب قطعة",part:"القطعة المطلوبة (الاسم، الرقم، التفاصيل)",photo:"صورة القطعة",sendreq:"إرسال الطلب",reqdone:"تم إرسال طلب القطعة.",time:"الوقت",hours:"أوقات العمل",closed:"مغلق",closedday:"الورشة مغلقة في هذا اليوم، اختر تاريخاً آخر.",watch:"شاهد الفيديو",search:"ابحث عن قطعة…",sortd:"ترتيب",lo:"السعر: الأقل أولاً",hi:"السعر: الأعلى أولاً",added:"تمت الإضافة للسلة",bookthis:"احجز هذه الخدمة",nowa:"لم يتم ضبط رقم واتساب بعد.",acc_login:"تسجيل الدخول",acc_reg:"إنشاء حساب",acc_out:"تسجيل الخروج",email:"البريد الإلكتروني",pw:"كلمة المرور (6 أحرف على الأقل)",noacc:"ليس لديك حساب؟ أنشئ حساباً",haveacc:"لديك حساب؟ سجّل الدخول",forgot:"نسيت كلمة المرور؟",resetsent:"أُرسل رابط إعادة تعيين كلمة المرور إلى بريدك.",needmail:"اكتب بريدك أولاً.",save:"حفظ البيانات",saved:"تم الحفظ.",myorders:"طلباتي",mybook:"حجوزاتي",myparts:"طلبات القطع",none:"لا يوجد شيء بعد.",badcred:"البريد أو كلمة المرور غير صحيحة.",emailused:"هذا البريد مسجّل مسبقاً.",weakpw:"كلمة المرور يجب ألا تقل عن 6 أحرف.",welcome:"مرحباً بك!",st_new:"تم الاستلام",st_processing:"قيد التنفيذ",st_ready:"جاهز",st_done:"مكتمل"}};
 const EMO={"🔍":"fa-gauge-high","⚙️":"fa-gears","🔧":"fa-gear","⚡":"fa-bolt","💻":"fa-microchip","🔑":"fa-key","🛠️":"fa-screwdriver-wrench"};
 const ic=s=>/^fa-/.test(s.icon||"")?s.icon:EMO[s.icon]||"fa-wrench";
 const DD=[["Computer scan to find faults fast and accurately.","فحص بالكمبيوتر لتحديد الأعطال بسرعة ودقة."],["Repair and overhaul for all engine types.","إصلاح وصيانة شاملة لجميع أنواع المحركات."],["Gearbox repair for automatic and manual cars.","إصلاح ناقل الحركة الأوتوماتيك والعادي."],["Wiring, sensors, alternator and battery faults.","أعطال الأسلاك والحساسات والدينامو والبطارية."],["ECU programming and software updates.","برمجة وحدة التحكم وتحديث البرامج."],["Key programming and replacement for most models.","برمجة المفاتيح وتبديلها لمعظم الموديلات."],["Periodic service, oil change and full inspection.","صيانة دورية وتغيير زيت وفحص شامل."]];
@@ -242,6 +248,7 @@ const yt=u=>(String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||
 function render(){
   document.documentElement.lang=lang;document.documentElement.dir=lang=="ar"?"rtl":"ltr";
   $("#lang").textContent=lang=="ar"?"English":"العربية";
+  $("#acc").innerHTML='<i class="fa-regular fa-user"></i> <span>'+esc(U?(PF.name||U.displayName||U.email).split(" ")[0]:tr("acc_login"))+'</span>';
   document.querySelectorAll("[data-i]").forEach(e=>e.textContent=tr(e.dataset.i));
   document.querySelectorAll("[data-ph]").forEach(e=>e.placeholder=tr(e.dataset.ph));
   const nm=pk(S,"name")||"BESTCAR FIXES";$("#sname").textContent=nm;$("#ht").textContent=nm;document.title=nm;
@@ -316,6 +323,39 @@ addEventListener("keydown",e=>{if(e.key=="Escape"){$("#md").hidden=true;$("#cart
 $("#qs").oninput=()=>render();$("#so").onchange=()=>render();
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("act",a.getAttribute("href")=="#"+e.target.id))}),{rootMargin:"-40% 0px -55% 0px"});
 document.querySelectorAll("section[id]").forEach(s=>io.observe(s));
+const auth=cfg.auth;let U=null,PF={};
+const save=async(c,d)=>{try{await addDoc(collection(db,c),d)}catch(e){if(d.uid){const {uid,...r}=d;try{await addDoc(collection(db,c),r)}catch(x){}}}};
+const prefill=()=>{const n=PF.name||(U&&U.displayName)||"",p=PF.phone||"",a=PF.address||"";
+  [["#cn",n],["#cp",p],["#ca",a]].forEach(([k,v])=>{if(v&&!$(k).value)$(k).value=v});
+  const f=$("#bf").elements,r=$("#rf").elements;if(n&&!f.name.value)f.name.value=n;if(p&&!f.phone.value)f.phone.value=p;if(n&&!r.name.value)r.name.value=n;if(p&&!r.phone.value)r.phone.value=p};
+const aerr=c=>/invalid-credential|wrong-password|user-not-found/.test(c)?tr("badcred"):c.includes("email-already")?tr("emailused"):c.includes("weak")?tr("weakpw"):c.includes("operation-not-allowed")?"Email/Password sign-in is disabled in Firebase":c;
+const authForm=m=>{$("#mc").innerHTML=`<form id="af" class="fm" data-m="${m}"><h2>${tr(m=="reg"?"acc_reg":"acc_login")}</h2>${m=="reg"?`<label><span>${tr("name")}</span><input name="name" required></label>`:""}<label><span>${tr("email")}</span><input name="email" type="email" required autocomplete="email"></label><label><span>${tr("pw")}</span><input name="pw" type="password" minlength="6" required autocomplete="${m=="reg"?"new-password":"current-password"}"></label><button>${tr(m=="reg"?"acc_reg":"acc_login")}</button><small id="aerr" style="color:#b3261e"></small><p><a href="#" data-am="${m=="reg"?"login":"reg"}">${tr(m=="reg"?"haveacc":"noacc")}</a>${m=="reg"?"":` · <a href="#" data-am="forgot">${tr("forgot")}</a>`}</p></form>`;$("#md").hidden=false};
+const showAcc=async()=>{
+  $("#mc").innerHTML=`<div class="fm"><h2>${esc(PF.name||U.displayName||U.email)}</h2><small>${esc(U.email)}</small><form id="pf" class="fm" style="padding:0"><label><span>${tr("name")}</span><input name="name" value="${esc(PF.name||U.displayName||"")}"></label><label><span>${tr("phone")}</span><input name="phone" type="tel" value="${esc(PF.phone||"")}"></label><label><span>${tr("addr")}</span><input name="address" value="${esc(PF.address||"")}"></label><button>${tr("save")}</button></form><div id="hist"></div><button id="lo" style="background:var(--n)">${tr("acc_out")}</button></div>`;
+  $("#md").hidden=false;
+  const rows=async c=>{try{return(await getDocs(query(collection(db,c),where("uid","==",U.uid)))).docs.map(d=>d.data()).sort((a,b)=>((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0))}catch(e){return[]}};
+  const [o,b,r]=await Promise.all([rows("orders"),rows("appointments"),rows("partRequests")]);
+  if(!U||$("#md").hidden)return;
+  const st=x=>`<span class="stt st-${x||"new"}">${tr("st_"+(x||"new"))}</span>`,dt=x=>x.createdAt&&x.createdAt.seconds?new Date(x.createdAt.seconds*1000).toLocaleDateString(lang=="ar"?"ar":"en"):"";
+  const sec=(t,l)=>`<h3 style="margin-top:12px">${tr(t)}</h3>${l.length?l.join(""):`<p>${tr("none")}</p>`}`;
+  $("#hist").innerHTML=sec("myorders",o.map(x=>`<div class="hrow"><b>${dt(x)}</b> ${st(x.status)}<br>${(x.items||[]).map(i=>esc(pk(i,"name"))+" ×"+i.qty).join("، ")} — $${Number(x.total||0).toFixed(2)}</div>`))
+   +sec("mybook",b.map(x=>`<div class="hrow"><b>${esc(x.date)} ${esc(x.time||"")}</b> ${st(x.status)}<br>${esc(x.service)} — ${esc(x.car)}</div>`))
+   +sec("myparts",r.map(x=>`<div class="hrow"><b>${dt(x)}</b> ${st(x.status)}<br>${esc(x.part)}</div>`))};
+onAuthStateChanged(auth,async u=>{U=u;PF={};if(u){try{PF=(await getDoc(doc(db,"users",u.uid))).data()||{}}catch(e){}}render();prefill()});
+$("#acc").onclick=()=>U?showAcc():authForm("login");
+document.addEventListener("click",async e=>{
+  const am=e.target.closest("[data-am]");
+  if(am){e.preventDefault();if(am.dataset.am!="forgot")return authForm(am.dataset.am);
+    const m=$("#af input[name=email]").value;if(!m){$("#aerr").textContent=tr("needmail");return}
+    try{await sendPasswordResetEmail(auth,m);$("#aerr").style.color="#0a7a2f";$("#aerr").textContent=tr("resetsent")}catch(x){$("#aerr").textContent=aerr(x.code||"")}}
+  if(e.target.closest("#lo")){await signOut(auth);$("#md").hidden=true}});
+document.addEventListener("submit",async e=>{const f=e.target;
+  if(f.id=="af"){e.preventDefault();const d=Object.fromEntries(new FormData(f)),reg=f.dataset.m=="reg";
+    try{if(reg){const c=await createUserWithEmailAndPassword(auth,d.email,d.pw);await updateProfile(c.user,{displayName:d.name});PF={name:d.name,phone:"",address:""};try{await setDoc(doc(db,"users",c.user.uid),PF)}catch(x){}}
+      else await signInWithEmailAndPassword(auth,d.email,d.pw);
+      $("#md").hidden=true;toast(tr("welcome"))}catch(x){$("#aerr").textContent=aerr(x.code||"")}}
+  if(f.id=="pf"){e.preventDefault();const d=Object.fromEntries(new FormData(f));PF={name:d.name,phone:d.phone,address:d.address};
+    try{await setDoc(doc(db,"users",U.uid),PF);toast(tr("saved"));render();prefill()}catch(x){toast(x.code||"error")}}});
 $("#cartbtn").onclick=()=>$("#cart").classList.add("open");
 $("#cx").onclick=()=>$("#cart").classList.remove("open");
 $("#lang").onclick=()=>{lang=lang=="ar"?"en":"ar";localStorage.lang=lang;render()};
@@ -324,14 +364,14 @@ $("#co").onclick=async()=>{
   if(!cart.length)return toast(tr("empty"));
   if(!num("whatsappOrders"))return toast(tr("nowa"));
   const total=cart.reduce((a,c)=>a+c.qty*c.price,0),o={name:$("#cn").value,phone:$("#cp").value,address:$("#ca").value,items:cart,total,status:"new",createdAt:serverTimestamp()};
-  addDoc(collection(db,"orders"),o).catch(()=>{});
+  save("orders",{...o,...(U?{uid:U.uid}:{})});
   openWA(`New order / طلب جديد\n${cart.map(c=>`• ${c.name} × ${c.qty} = $${(c.qty*c.price).toFixed(2)}`).join("\n")}\nTotal: $${total.toFixed(2)}\n${o.name} | ${o.phone}\n${o.address}`,"whatsappOrders");
   cart=[];drawCart();$("#cart").classList.remove("open");
 };
 $("#bf").onsubmit=async e=>{
   e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
-  if(API&&await post("/api/bookings",f)){$("#bf").reset();return toast(tr("done"))}
-  addDoc(collection(db,"appointments"),{...f,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
+  if(API&&await post("/api/bookings",f)){$("#bf").reset();prefill();return toast(tr("done"))}
+  save("appointments",{...f,status:"new",createdAt:serverTimestamp(),...(U?{uid:U.uid}:{})});
   openWA(`Booking / حجز موعد\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.service}\n${f.date} ${f.time} | ${f.location}\n${f.notes}`,"whatsappBookings");
   e.target.reset();toast(tr("done"));
 };
@@ -340,9 +380,9 @@ $("#bf").elements.date.onchange=e=>{const s=slots(e.target.value);$("#bt").inner
 let rimg="";
 $("#rf").elements.image.onchange=async e=>{rimg=e.target.files[0]?await toData(e.target.files[0],800):""};
 $("#rf").onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));delete f.image;
-  addDoc(collection(db,"partRequests"),{...f,image:rimg,status:"new",createdAt:serverTimestamp()}).catch(()=>{});
+  save("partRequests",{...f,image:rimg,status:"new",createdAt:serverTimestamp(),...(U?{uid:U.uid}:{})});
   openWA(`Part request / طلب قطعة\n${f.name} | ${f.phone}\n${f.car} (${f.year})\n${f.part}`,"whatsappOrders");
-  e.target.reset();rimg="";toast(tr("reqdone"))};
+  e.target.reset();rimg="";prefill();toast(tr("reqdone"))};
 render();
 // تحديث مباشر: أي تغيير من لوحة التحكم يظهر فوراً دون إعادة تحميل الصفحة
 const live=(n,set)=>onSnapshot(collection(db,n),q=>{set(q.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error("Firestore:",n,e.code||e));
