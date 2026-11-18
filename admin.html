@@ -20,15 +20,23 @@ input,textarea,select{padding:9px;border:1px solid #b8c1ca;border-radius:4px;fon
 .del{background:#a61e1e}.sec{background:#12263a}
 #login{max-width:360px;margin:12vh auto;grid-template-columns:1fr}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}.tb{position:relative}.tb img{width:70px;height:70px;object-fit:cover;border-radius:4px;border:1px solid #d5dbe0}.tb button{position:absolute;top:-7px;inset-inline-end:-7px;padding:0 7px;border-radius:50%;font-size:15px;background:#a61e1e}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.st{gap:2px}.st b{font-size:28px;color:#12263a}.st small{color:#5f6b78}
+.bars{display:flex;align-items:flex-end;gap:6px;height:170px}.bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px;min-width:0}.bars i{display:block;width:100%;background:#c9a45c;border-radius:3px 3px 0 0;min-height:2px}.bars small,.bars span{font-size:11px;color:#5f6b78}
+.flt{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.flt input,.flt select{width:auto;min-width:150px}
+.nb{background:#c9a45c;color:#111;border-radius:10px;padding:0 7px;font-size:12px;margin-inline-start:6px}
+#bn{position:fixed;top:14px;inset-inline:0;margin:auto;width:max-content;max-width:92%;background:#c9a45c;color:#111;font-weight:700;padding:12px 22px;border-radius:8px;box-shadow:0 8px 24px #0005;z-index:50;transform:translateY(-160%);transition:transform .3s;cursor:pointer}#bn.show{transform:none}
+[hidden]{display:none!important}
+.row select{width:auto;min-width:130px}
 </style></head>
 <body>
-<header><b>لوحة التحكم – BESTCAR FIXES</b><button id="out" hidden>تسجيل الخروج</button></header>
+<header><b>لوحة التحكم – BESTCAR FIXES</b><button id="snd" hidden style="background:#2c4a66"></button><button id="out" hidden>تسجيل الخروج</button></header>
 <main id="login" class="box"><h3>تسجيل الدخول</h3><input id="em" type="email" placeholder="البريد الإلكتروني"><input id="pw" type="password" placeholder="كلمة المرور"><button id="go">دخول</button><small id="err" style="color:#a61e1e"></small></main>
 <nav id="tabs" hidden></nav><main id="app" hidden></main>
 <datalist id="cats"></datalist>
+<div id="bn" role="status"></div>
 <script type="module">
 import {db,auth} from "./firebase-config.js";
-import {collection,doc,getDoc,getDocs,addDoc,setDoc,updateDoc,deleteDoc,orderBy,query} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,doc,getDoc,getDocs,addDoc,setDoc,updateDoc,deleteDoc,orderBy,query,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const F={
@@ -38,14 +46,14 @@ services:[["title","اسم الخدمة (EN)"],["titleAr","اسم الخدمة (
 products:[["name","اسم المنتج (EN)"],["nameAr","اسم المنتج (AR)"],["price","السعر ($)","n"],["category","التصنيف (نفس اسم التصنيف EN)"],["desc","الوصف (EN)","t"],["descAr","الوصف (AR)","t"],["videoUrls","روابط فيديوهات يوتيوب لشرح المنتج (رابط في كل سطر)","t"],["video","فيديو مرتبط من قسم الفيديوهات","v"],["images","صور المنتج (حتى 5 صور، الأولى هي الرئيسية)","imgs"]],
 categories:[["name","اسم التصنيف (EN)"],["nameAr","اسم التصنيف (AR)"]],
 videos:[["title","عنوان الفيديو"],["url","رابط يوتيوب"]]};
-const N={settings:"الإعدادات",banners:"العروض",services:"الخدمات",products:"المنتجات",categories:"التصنيفات",videos:"الفيديوهات",orders:"الطلبات",appointments:"المواعيد",partRequests:"طلبات القطع",schedule:"أوقات العمل"};
+const N={dash:"الرئيسية",settings:"الإعدادات",banners:"العروض",services:"الخدمات",products:"المنتجات",categories:"التصنيفات",videos:"الفيديوهات",orders:"الطلبات",appointments:"المواعيد",partRequests:"طلبات القطع",schedule:"أوقات العمل"};
 const DN=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const ytId=u=>(String(u||"").match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||[])[1];
 const ytI=r=>{const i=ytId(r.url);return i?`<img src="https://img.youtube.com/vi/${i}/default.jpg">`:""};
 const DD=[["Computer scan to find faults fast and accurately.","فحص بالكمبيوتر لتحديد الأعطال بسرعة ودقة."],["Repair and overhaul for all engine types.","إصلاح وصيانة شاملة لجميع أنواع المحركات."],["Gearbox repair for automatic and manual cars.","إصلاح ناقل الحركة الأوتوماتيك والعادي."],["Wiring, sensors, alternator and battery faults.","أعطال الأسلاك والحساسات والدينامو والبطارية."],["ECU programming and software updates.","برمجة وحدة التحكم وتحديث البرامج."],["Key programming and replacement for most models.","برمجة المفاتيح وتبديلها لمعظم الموديلات."],["Periodic service, oil change and full inspection.","صيانة دورية وتغيير زيت وفحص شامل."]];
 const DEF=[["fa-gauge-high","Car diagnostics","فحص الأعطال بالكمبيوتر"],["fa-gears","Engine repair","إصلاح المحركات"],["fa-gear","Transmission repair","إصلاح ناقل الحركة"],["fa-bolt","Electrical system repair","إصلاح الكهرباء"],["fa-microchip","Computer programming","برمجة الكمبيوتر"],["fa-key","Key programming","برمجة المفاتيح"],["fa-screwdriver-wrench","General vehicle maintenance","الصيانة العامة"]];
 addEventListener("unhandledrejection",e=>{const c=(e.reason&&e.reason.code)||"";alert(c.includes("permission")?"فشل الحفظ: لا توجد صلاحية. تأكد أن UID حسابك في Authentication مطابق للمكتوب في قواعد Firestore ثم اضغط Publish.":"حدث خطأ: "+(c||e.reason))});
-let cur="settings",edit=null,img={},VL=[],IM=[];
+let cur="dash",edit=null,img={},VL=[],IM=[];
 const thumbs=()=>IM.map((u,i)=>`<span class="tb"><img src="${u}"><button type="button" data-rm="${i}">×</button></span>`).join("");
 const form=(fs,v={})=>fs.map(([k,l,t])=>`<label>${l}${t=="t"?`<textarea rows=3 data-k="${k}">${esc(v[k])}</textarea>`:t=="imgs"?`<input type=file multiple accept="image/*" data-fm="${k}"><div class="thumbs" id="th_${k}">${thumbs()}</div>`:t=="v"?`<select data-k="${k}"><option value="">—</option>${VL.map(x=>`<option value="${x.id}" ${x.id==v[k]?"selected":""}>${esc(x.title)}</option>`).join("")}</select>`:t=="img"?`<input type=file accept="image/*" data-f="${k}"><img class=pv id="pv_${k}" src="${v[k]||""}" ${v[k]?"":"hidden"}>`:`<input data-k="${k}" type="${t=="n"?"number":"text"}" step="any" ${k=="category"?'list=cats':""} value="${esc(v[k])}">`}</label>`).join("");
 const collect=(fs,old={})=>{const o={};fs.forEach(([k,,t])=>{const e=document.querySelector(`[data-k="${k}"]`);o[k]=t=="imgs"?[...IM]:t=="img"?(img[k]||old[k]||""):t=="n"?+e.value||0:e.value.trim()});return o};
@@ -53,9 +61,51 @@ const toData=(file,max)=>new Promise(r=>{const i=new Image();i.onload=()=>{const
 document.addEventListener("change",async e=>{if(e.target.dataset.fm){for(const f of [...e.target.files].slice(0,Math.max(0,5-IM.length)))IM.push(await toData(f,700));$("#th_images").innerHTML=thumbs();e.target.value="";return}
   const k=e.target.dataset.f;if(!k)return;img[k]=await toData(e.target.files[0],k=="logo"?400:k=="heroImage"?1600:800);const p=$("#pv_"+k);p.src=img[k];p.hidden=false});
 const list=async n=>(await getDocs(query(collection(db,n),...(n=="orders"||n=="appointments"||n=="partRequests"?[orderBy("createdAt","desc")]:[])))).docs.map(d=>({id:d.id,...d.data()}));
+const ST=[["new","جديد"],["processing","قيد التنفيذ"],["ready","جاهز"],["done","مكتمل"]],stL=x=>(ST.find(y=>y[0]==x)||ST[0])[1];
+let ROWS=[],NEWC={};
+const tabsDraw=()=>{$("#tabs").innerHTML=Object.keys(N).map(k=>`<button class="${k==cur?"on":""}" data-t="${k}">${N[k]}${NEWC[k]?`<span class="nb">${NEWC[k]}</span>`:""}</button>`).join("")};
+const pad=n=>String(n).padStart(2,"0"),cd=r=>r.createdAt&&r.createdAt.seconds?new Date(r.createdAt.seconds*1000):null;
+const fday=d=>d?`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`:"",fd=d=>d?fday(d)+` ${pad(d.getHours())}:${pad(d.getMinutes())}`:"";
+const filtered=()=>{const q=($("#fq").value||"").trim().toLowerCase(),st=$("#fs").value,f=$("#ff").value,t=$("#ft").value;
+  return ROWS.filter(r=>(!st||(r.status||"new")==st)&&(!q||((r.name||"")+" "+(r.phone||"")).toLowerCase().includes(q))&&(!f||fday(cd(r))>=f)&&(!t||fday(cd(r))<=t))};
+const rowHtml=r=>`<div class="row"><span><b>${esc(r.name)}</b> – ${esc(r.phone)} <small>${fd(cd(r))}</small><br>${cur=="orders"?(r.items||[]).map(i=>"<bdi>"+esc(i.name)+" ×"+i.qty+"</bdi>").join("، ")+" | <bdi>$"+Number(r.total||0).toFixed(2)+"</bdi><br>"+esc(r.address):cur=="partRequests"?esc(r.car)+" ("+esc(r.year)+")<br>"+esc(r.part)+(r.image?`<br><img src="${r.image}" style="height:auto;width:auto;max-height:120px">`:""):esc(r.car)+" ("+esc(r.year)+") – "+esc(r.service)+"<br>"+esc(r.date)+" "+esc(r.time||"")+" | "+esc(r.location)+"<br>"+esc(r.notes)}</span><select data-s="${r.id}">${ST.map(([v,l])=>`<option value=${v} ${(r.status||"new")==v?"selected":""}>${l}</option>`).join("")}</select><button class="sec" data-p="${r.id}">طباعة</button><button class="del" data-d="${r.id}">حذف</button></div>`;
+const drawList=()=>{const L=filtered();$("#cnt").innerHTML=`<bdi>(${L.length}/${ROWS.length})</bdi>`+(cur=="orders"?` — الإجمالي <bdi>$${L.reduce((a,r)=>a+Number(r.total||0),0).toFixed(2)}</bdi>`:"");$("#lst").innerHTML=L.map(rowHtml).join("")||"<p>لا توجد نتائج.</p>"};
+const printRow=r=>{if(!r)return;const w=window.open("","_blank");if(!w)return alert("اسمح بالنوافذ المنبثقة للطباعة");
+  const body=cur=="orders"?`<p>العنوان: ${esc(r.address)}</p><table border=1 cellpadding=6 style="border-collapse:collapse;width:100%"><tr><th>المنتج</th><th>الكمية</th><th>السعر</th></tr>${(r.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>${i.qty}</td><td>$${Number(i.price||0).toFixed(2)}</td></tr>`).join("")}</table><h3>الإجمالي: $${Number(r.total||0).toFixed(2)}</h3>`
+   :cur=="appointments"?`<p>السيارة: ${esc(r.car)} (${esc(r.year)})</p><p>الخدمة: ${esc(r.service)}</p><p>الموعد: ${esc(r.date)} ${esc(r.time||"")}</p><p>الموقع: ${esc(r.location)}</p><p>ملاحظات: ${esc(r.notes)}</p>`
+   :`<p>السيارة: ${esc(r.car)} (${esc(r.year)})</p><p>القطعة: ${esc(r.part)}</p>${r.image?`<img src="${r.image}" style="max-width:300px">`:""}`;
+  w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>${N[cur]}</title></head><body style="font-family:Tahoma,sans-serif;padding:24px"><h2>BESTCAR FIXES – ${N[cur]}</h2><p>الاسم: ${esc(r.name)} | الهاتف: ${esc(r.phone)}</p><p>التاريخ: ${fd(cd(r))}</p>${body}</body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),300)};
+const loadX=()=>new Promise((ok,no)=>{if(window.XLSX)return ok();const e=document.createElement("script");e.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";e.onload=ok;e.onerror=no;setTimeout(no,8000);document.head.appendChild(e)});
+const exportXl=async()=>{const L=filtered();if(!L.length)return alert("لا توجد بيانات للتصدير");
+  const map={orders:r=>({"التاريخ":fd(cd(r)),"الاسم":r.name,"الهاتف":r.phone,"العنوان":r.address,"المنتجات":(r.items||[]).map(i=>i.name+" ×"+i.qty).join("، "),"الإجمالي ($)":Number(r.total||0),"الحالة":stL(r.status)}),
+   appointments:r=>({"التاريخ":fd(cd(r)),"الاسم":r.name,"الهاتف":r.phone,"السيارة":r.car,"السنة":r.year,"الخدمة":r.service,"الموعد":r.date,"الوقت":r.time||"","الموقع":r.location,"ملاحظات":r.notes,"الحالة":stL(r.status)}),
+   partRequests:r=>({"التاريخ":fd(cd(r)),"الاسم":r.name,"الهاتف":r.phone,"السيارة":r.car,"السنة":r.year,"القطعة":r.part,"الحالة":stL(r.status)})};
+  const data=L.map(map[cur]),name=cur+"-"+fday(new Date());
+  try{await loadX();const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);ws["!cols"]=Object.keys(data[0]).map(()=>({wch:22}));wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,N[cur]);XLSX.writeFile(wb,name+".xlsx")}
+  catch(e){const k=Object.keys(data[0]),sf=v=>typeof v=="string"&&/^[=+\-@]/.test(v)?"'"+v:v,csv="\ufeff"+[k,...data.map(o=>k.map(x=>sf(o[x])))].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"),a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=name+".csv";a.click()}};
+const beep=()=>{if(localStorage.snd=="off")return;try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.001,c.currentTime);g.gain.exponentialRampToValueAtTime(.3,c.currentTime+.02);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.6);o.start();o.stop(c.currentTime+.65)}catch(e){}};
+const banner=(t,c)=>{const b=$("#bn");b.textContent=t;b.classList.add("show");b.onclick=()=>{cur=c;edit=null;show();b.classList.remove("show")};clearTimeout(banner.t);banner.t=setTimeout(()=>b.classList.remove("show"),7000);document.title="● "+t}
+addEventListener("focus",()=>document.title="لوحة التحكم");
+const sndLbl=()=>$("#snd").textContent="التنبيه الصوتي: "+(localStorage.snd=="off"?"متوقف":"مفعّل");
+let seen={},unsub=[];const WL={orders:"طلب جديد",appointments:"حجز موعد جديد",partRequests:"طلب قطعة جديد"};
+const refreshRows=async()=>{ROWS=await list(cur);drawList()};
+const watch=()=>{unsub.forEach(f=>f());seen={};unsub=["orders","appointments","partRequests"].map(c=>onSnapshot(collection(db,c),q=>{
+  NEWC[c]=q.docs.filter(d=>{const x=d.data().status;return !x||x=="new"}).length;
+  if(seen[c])q.docChanges().forEach(ch=>{if(ch.type=="added"&&!ch.doc.metadata.hasPendingWrites){beep();banner(WL[c]+": "+(ch.doc.data().name||""),c);if(cur=="dash")show();else if(cur==c)refreshRows()}});
+  seen[c]=true;tabsDraw()},e=>console.error(c,e.code)))};
 async function show(){
-  $("#tabs").innerHTML=Object.keys(N).map(k=>`<button class="${k==cur?"on":""}" data-t="${k}">${N[k]}</button>`).join("");
+  tabsDraw();
   const m=$("#app");img={};
+  if(cur=="dash"){const [o,a,p]=await Promise.all([list("orders"),list("appointments"),list("partRequests")]);
+    const now=new Date(),today=fday(now),w7=new Date(now);w7.setDate(now.getDate()-6);const wkS=fday(w7),mo=today.slice(0,7),D=r=>fday(cd(r)),sum=L=>L.reduce((x,r)=>x+Number(r.total||0),0),isNew=r=>!r.status||r.status=="new";
+    const oT=o.filter(r=>D(r)==today),oW=o.filter(r=>D(r)>=wkS),oM=o.filter(r=>D(r).startsWith(mo));
+    const days=[...Array(14)].map((_,i)=>{const d=new Date(now);d.setDate(now.getDate()-13+i);return fday(d)}),cnt=days.map(d=>o.filter(r=>D(r)==d).length),mx=Math.max(1,...cnt);
+    const top={};o.forEach(r=>(r.items||[]).forEach(i=>top[i.name]=(top[i.name]||0)+i.qty));const tp=Object.entries(top).sort((x,y)=>y[1]-x[1]).slice(0,5);
+    const card=(l,v,t)=>`<div class="box st"><small>${l}</small><b>${v}</b>${t?`<small>${t}</small>`:""}</div>`;
+    m.innerHTML=`<div class="stats" style="grid-column:1/-1">${card("طلبات جديدة",o.filter(isNew).length)}${card("طلبات اليوم",oT.length,"$"+sum(oT).toFixed(2))}${card("طلبات آخر 7 أيام",oW.length,"$"+sum(oW).toFixed(2))}${card("قيمة طلبات هذا الشهر","$"+sum(oM).toFixed(2),oM.length+" طلب")}${card("حجوزات جديدة",a.filter(isNew).length)}${card("مواعيد قادمة",a.filter(r=>r.date>=today&&r.status!="done").length)}${card("طلبات قطع جديدة",p.filter(isNew).length)}</div>
+    <div class="box"><h3>الطلبات آخر 14 يوماً</h3><div class="bars">${cnt.map((c,i)=>`<div title="${days[i]}: ${c}"><span>${c||""}</span><i style="height:${Math.round(c/mx*100)}%"></i><small>${days[i].slice(8)}</small></div>`).join("")}</div></div>
+    <div class="box"><h3>الأكثر طلباً</h3>${tp.length?tp.map(([n,q])=>`<div class="row"><span>${esc(n)}</span><b>${q}</b></div>`).join(""):"<p>لا توجد بيانات بعد.</p>"}</div>`;return}
   if(cur=="schedule"){const s=(await getDoc(doc(db,"settings","site"))).data()||{},h=s.hours||{};
     m.innerHTML=`<div class="box">${DN.map((n,i)=>{const x=h[i]||{};return `<div class="row"><b style="width:80px">${n}</b><label style="flex-direction:row;align-items:center;gap:4px"><input type=checkbox id="x${i}" style="width:auto" ${x.x?"checked":""}>مغلق</label><input type=time id="o${i}" value="${x.o||"09:00"}" style="width:120px"><input type=time id="c${i}" value="${x.c||"18:00"}" style="width:120px"></div>`}).join("")}<button id="sv">حفظ أوقات العمل</button></div>`;
     $("#sv").onclick=async()=>{const hours={};DN.forEach((_,i)=>hours[i]={x:$("#x"+i).checked,o:$("#o"+i).value,c:$("#c"+i).value});await setDoc(doc(db,"settings","site"),{hours},{merge:true});alert("تم الحفظ")};return}
@@ -63,8 +113,9 @@ async function show(){
     m.innerHTML=`<div class="box">${form(F.settings,s)}<button id="sv">حفظ الإعدادات</button></div>`;
     $("#sv").onclick=async()=>{await setDoc(doc(db,"settings","site"),collect(F.settings,s),{merge:true});alert("تم الحفظ")};return}
   const rows=await list(cur);
-  if(cur=="orders"||cur=="appointments"||cur=="partRequests"){
-    m.innerHTML=`<div class="box" style="grid-column:1/-1"><h3>${N[cur]} (${rows.length})</h3>${rows.map(r=>`<div class="row"><span><b>${esc(r.name)}</b> – ${esc(r.phone)}<br>${cur=="orders"?r.items.map(i=>esc(i.name)+" ×"+i.qty).join("، ")+" | $"+Number(r.total).toFixed(2)+"<br>"+esc(r.address):cur=="partRequests"?esc(r.car)+" ("+esc(r.year)+")<br>"+esc(r.part)+(r.image?`<br><img src="${r.image}" style="height:auto;width:auto;max-height:120px">`:""):esc(r.car)+" ("+esc(r.year)+") – "+esc(r.service)+"<br>"+esc(r.date)+" | "+esc(r.location)+"<br>"+esc(r.notes)}</span><select data-s="${r.id}">${[["new","جديد"],["processing","قيد التنفيذ"],["ready","جاهز"],["done","مكتمل"]].map(([v,l])=>`<option value=${v} ${r.status==v?"selected":""}>${l}</option>`).join("")}</select><button class="del" data-d="${r.id}">حذف</button></div>`).join("")}</div>`;return}
+  if(cur=="orders"||cur=="appointments"||cur=="partRequests"){ROWS=rows;
+    m.innerHTML=`<div class="box" style="grid-column:1/-1"><h3>${N[cur]} <span id="cnt"></span></h3><div class="flt"><input id="fq" placeholder="بحث بالاسم أو الهاتف..."><select id="fs"><option value="">كل الحالات</option>${ST.map(([v,l])=>`<option value=${v}>${l}</option>`).join("")}</select><label>من<input id="ff" type="date"></label><label>إلى<input id="ft" type="date"></label><button class="sec" id="xl">تصدير Excel</button></div><div id="lst"></div></div>`;
+    ["fq","fs","ff","ft"].forEach(i=>$("#"+i).oninput=drawList);$("#xl").onclick=exportXl;drawList();return}
   if(cur=="products")VL=await list("videos");
   if(cur=="products")$("#cats").innerHTML=(await list("categories")).map(c=>`<option value="${esc(c.name)}">`).join("");
   const cur_=rows.find(r=>r.id==edit)||{},lab=r=>r.title||r.name||r.url;
@@ -78,10 +129,12 @@ async function show(){
 document.addEventListener("click",async e=>{const d=e.target.dataset||{};
   if(d.rm!==undefined){IM.splice(+d.rm,1);$("#th_images").innerHTML=thumbs()}
   if(d.t){cur=d.t;edit=null;show()}
+  if(d.p){printRow(ROWS.find(x=>x.id==d.p))}
   if(d.e){edit=d.e;show();scrollTo(0,0)}
   if(d.d&&confirm("هل أنت متأكد من الحذف؟")){await deleteDoc(doc(db,cur,d.d));show()}});
-document.addEventListener("change",async e=>{if(e.target.dataset.s)await updateDoc(doc(db,cur,e.target.dataset.s),{status:e.target.value})});
+document.addEventListener("change",async e=>{if(e.target.dataset.s){await updateDoc(doc(db,cur,e.target.dataset.s),{status:e.target.value});const r=ROWS.find(x=>x.id==e.target.dataset.s);if(r)r.status=e.target.value}});
 $("#go").onclick=()=>signInWithEmailAndPassword(auth,$("#em").value,$("#pw").value).catch(e=>{const c=e.code||"";$("#err").textContent=/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?"البريد أو كلمة المرور غير صحيحة، أو لا يوجد مستخدم بهذا البريد":c.includes("operation-not-allowed")?"طريقة Email/Password غير مفعّلة في Firebase":c.includes("unauthorized-domain")?"النطاق غير مضاف في Authorized domains":c.includes("api-key")?"مفتاح Firebase في firebase-config.js غير صحيح":"تعذر الدخول: "+c});
+$("#snd").onclick=()=>{localStorage.snd=localStorage.snd=="off"?"on":"off";sndLbl();beep()};
 $("#out").onclick=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{["#login"].forEach(s=>$(s).hidden=!!u);["#tabs","#app","#out"].forEach(s=>$(s).hidden=!u);if(u){$("header b").textContent="لوحة التحكم | "+u.email+" | UID: "+u.uid;show()}});
+onAuthStateChanged(auth,u=>{["#login"].forEach(s=>$(s).hidden=!!u);["#tabs","#app","#out","#snd"].forEach(s=>$(s).hidden=!u);if(u){$("header b").textContent="لوحة التحكم | "+u.email;$("header b").title="UID: "+u.uid;sndLbl();watch();show()}else{unsub.forEach(f=>f());unsub=[]}});
 </script></body></html>
