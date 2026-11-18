@@ -5,11 +5,11 @@
 <meta name="robots" content="noindex,nofollow">
 <title>لوحة التحكم</title>
 <style>
-body{margin:0;font:16px/1.6 system-ui,Tahoma,sans-serif;background:#eceff1;color:#1d2733}
-header{background:#12263a;color:#fff;padding:12px 4%;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+body{margin:0;font:16px/1.6 system-ui,Tahoma,sans-serif;background:#f4f5fa;color:#1d2733}
+header{background:#0f0d78;color:#fff;padding:12px 4%;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 header b{margin-inline-end:auto}
-button{background:#e8431a;color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
-nav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 4%}nav button{background:#fff;color:#12263a;border:1px solid #cfd6dc}nav .on{background:#12263a;color:#fff}
+button{background:#c14006;color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 4%}nav button{background:#fff;color:#0f0d78;border:1px solid #cfd6dc}nav .on{background:#0f0d78;color:#fff}
 main{padding:0 4% 40px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 .box{background:#fff;border:1px solid #d5dbe0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
 label{display:flex;flex-direction:column;gap:3px;font-size:14px;color:#5f6b78}
@@ -17,19 +17,19 @@ input,textarea,select{padding:9px;border:1px solid #b8c1ca;border-radius:4px;fon
 .pv{max-height:80px;max-width:140px;object-fit:contain}
 .row{display:flex;gap:8px;align-items:center;border-bottom:1px solid #e3e8ec;padding:6px 0;flex-wrap:wrap}.row span{flex:1;min-width:140px}
 .row img{height:38px;width:38px;object-fit:cover;border-radius:4px}
-.del{background:#a61e1e}.sec{background:#12263a}
+.del{background:#a61e1e}.sec{background:#0f0d78}
 #login{max-width:360px;margin:12vh auto;grid-template-columns:1fr}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}.tb{position:relative}.tb img{width:70px;height:70px;object-fit:cover;border-radius:4px;border:1px solid #d5dbe0}.tb button{position:absolute;top:-7px;inset-inline-end:-7px;padding:0 7px;border-radius:50%;font-size:15px;background:#a61e1e}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.st{gap:2px}.st b{font-size:28px;color:#12263a}.st small{color:#5f6b78}
-.bars{display:flex;align-items:flex-end;gap:6px;height:170px}.bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px;min-width:0}.bars i{display:block;width:100%;background:#c9a45c;border-radius:3px 3px 0 0;min-height:2px}.bars small,.bars span{font-size:11px;color:#5f6b78}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.st{gap:2px}.st b{font-size:28px;color:#0f0d78}.st small{color:#5f6b78}
+.bars{display:flex;align-items:flex-end;gap:6px;height:170px}.bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px;min-width:0}.bars i{display:block;width:100%;background:#c14006;border-radius:3px 3px 0 0;min-height:2px}.bars small,.bars span{font-size:11px;color:#5f6b78}
 .flt{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.flt input,.flt select{width:auto;min-width:150px}
-.nb{background:#c9a45c;color:#111;border-radius:10px;padding:0 7px;font-size:12px;margin-inline-start:6px}
-#bn{position:fixed;top:14px;inset-inline:0;margin:auto;width:max-content;max-width:92%;background:#c9a45c;color:#111;font-weight:700;padding:12px 22px;border-radius:8px;box-shadow:0 8px 24px #0005;z-index:50;transform:translateY(-160%);transition:transform .3s;cursor:pointer}#bn.show{transform:none}
+.nb{background:#c14006;color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-inline-start:6px}
+#bn{position:fixed;top:14px;inset-inline:0;margin:auto;width:max-content;max-width:92%;background:#c14006;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;box-shadow:0 8px 24px #0005;z-index:50;transform:translateY(-160%);transition:transform .3s;cursor:pointer}#bn.show{transform:none}
 [hidden]{display:none!important}
 .row select{width:auto;min-width:130px}
 </style></head>
 <body>
-<header><b>لوحة التحكم – BESTCAR FIXES</b><button id="snd" hidden style="background:#2c4a66"></button><button id="out" hidden>تسجيل الخروج</button></header>
+<header><b>لوحة التحكم – BESTCAR FIXES</b><button id="snd" hidden style="background:#2a2894"></button><button id="out" hidden>تسجيل الخروج</button></header>
 <main id="login" class="box"><h3>تسجيل الدخول</h3><input id="em" type="email" placeholder="البريد الإلكتروني"><input id="pw" type="password" placeholder="كلمة المرور"><button id="go">دخول</button><small id="err" style="color:#a61e1e"></small></main>
 <nav id="tabs" hidden></nav><main id="app" hidden></main>
 <datalist id="cats"></datalist>
